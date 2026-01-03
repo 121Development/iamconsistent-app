@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { eq, and } from 'drizzle-orm'
-import { getDb } from '../lib/db/client' 
+import { createDb } from '../lib/db/client' 
 import { habits, users } from '../lib/db'
 import {
   createHabitSchema,
@@ -10,13 +10,14 @@ import {
   getHabitSchema,
 } from './schemas'
 import { canCreateHabit } from '../lib/subscription'
+import { env } from 'cloudflare:workers'
 
 // Get all habits for the current user
 export const getHabits = createServerFn({ method: 'GET' }).handler(async () => {
   // Auth disabled - use demo user ID
   const userId = 'demo-user'
 
-  const db = getDb()
+  const db = createDb(env.DB)
 
   const userHabits = await db
     .select()
@@ -34,7 +35,7 @@ export const getHabit = createServerFn({ method: 'GET' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)  
 
     const [habit] = await db
       .select()
@@ -56,7 +57,7 @@ export const createHabit = createServerFn({ method: 'POST' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)
 
     // Skip subscription checks for demo
 
@@ -87,7 +88,7 @@ export const updateHabit = createServerFn({ method: 'POST' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)
 
     // Verify ownership
     const [existingHabit] = await db
@@ -128,7 +129,7 @@ export const deleteHabit = createServerFn({ method: 'POST' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)
 
     // Verify ownership
     const [existingHabit] = await db

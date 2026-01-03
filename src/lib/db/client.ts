@@ -1,15 +1,11 @@
 import { drizzle } from 'drizzle-orm/d1'
+import * as schema from "../../lib/db/schema";
 
-let db: ReturnType<typeof drizzle> | null = null
-
-export function initDatabase(bindingDb: D1Database) {
-  db = drizzle(bindingDb)
+export interface Env {
+  // This must match the binding name in your wrangler.toml
+  DB: D1Database;
 }
 
-// Initialize Drizzle with D1 binding
-export function getDb() {
-  if (!db) {
-    throw new Error('Database not initialized')
-  }
-  return db
-}
+export const createDb = (d1: D1Database) =>
+  drizzle(d1, { schema }); // schema is optional but useful for typing
+

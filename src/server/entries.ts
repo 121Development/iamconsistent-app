@@ -1,13 +1,14 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { eq, and, gte, lte } from 'drizzle-orm'
-import { getDb } from '../lib/db/client' 
+import { createDb } from '../lib/db/client'
 import { entries, habits } from '../lib/db'
 import {
   createEntrySchema,
   deleteEntrySchema,
   getEntriesSchema,
 } from './schemas'
+import { env } from 'cloudflare:workers'
 
 // Get all entries for a habit
 export const getEntries = createServerFn({ method: 'GET' })
@@ -16,7 +17,7 @@ export const getEntries = createServerFn({ method: 'GET' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)
 
     // Verify habit ownership
     const [habit] = await db
@@ -56,7 +57,7 @@ export const createEntry = createServerFn({ method: 'POST' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)
 
     // Verify habit ownership
     const [habit] = await db
@@ -100,7 +101,7 @@ export const deleteEntry = createServerFn({ method: 'POST' })
     // Auth disabled - use demo user ID
     const userId = 'demo-user'
 
-    const db = getDb()
+    const db = createDb(env.DB)
 
     // Verify entry ownership
     const [existingEntry] = await db

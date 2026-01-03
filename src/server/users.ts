@@ -1,8 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
-import { auth, currentUser } from '@clerk/tanstack-react-start/server'
+import { auth } from '@clerk/tanstack-react-start/server'
 import { eq } from 'drizzle-orm'
-import { getDb } from '../lib/db/client' 
+import { createDb } from '../lib/db/client' 
 import { users } from '../lib/db'
+import { env } from 'cloudflare:workers'
 
 /**
  * Sync Clerk user to our database
@@ -14,20 +15,20 @@ export const syncUser = createServerFn({ method: 'POST' }).handler(async () => {
     throw new Error('Unauthorized')
   }
 
-  const clerkUser = await currentUser()
-  if (!clerkUser) {
-    throw new Error('User not found in Clerk')
-  }
+//  const clerkUser = await currentUser()
+//  if (!clerkUser) {
+//    throw new Error('User not found in Clerk')
+//  }
 
-  const db = getDb()
+  const db = createDb(env.DB)
 
   // Check if user exists
   const [existingUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
 
-  const email = clerkUser.emailAddresses[0]?.emailAddress
-  if (!email) {
-    throw new Error('User email not found')
-  }
+//  const email = clerkUser.emailAddresses[0]?.emailAddress
+//  if (!email) {
+//    throw new Error('User email not found')
+//  }
 
   if (!existingUser) {
     // Create new user
@@ -35,7 +36,7 @@ export const syncUser = createServerFn({ method: 'POST' }).handler(async () => {
       .insert(users)
       .values({
         id: userId,
-        email,
+        email: '',
         subscriptionTier: 'free',
       })
       .returning()
@@ -47,7 +48,7 @@ export const syncUser = createServerFn({ method: 'POST' }).handler(async () => {
   const [updatedUser] = await db
     .update(users)
     .set({
-      email,
+      email: '',
       updatedAt: new Date().toISOString(),
     })
     .where(eq(users.id, userId))
@@ -65,7 +66,7 @@ export const getCurrentUser = createServerFn({ method: 'GET' }).handler(async ()
     throw new Error('Unauthorized')
   }
 
-  const db = getDb()
+    const db = createDb(env.DB)
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
 

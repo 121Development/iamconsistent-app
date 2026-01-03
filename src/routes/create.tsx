@@ -24,19 +24,23 @@ function Dashboard() {
 
   async function loadData() {
     try {
+      console.log('Loading habits...')
       const habitsData = await getHabits()
+      console.log('Habits loaded:', habitsData)
       setHabits(habitsData)
 
       // Load entries for each habit
       const entriesData: Record<string, any[]> = {}
       for (const habit of habitsData) {
+        console.log('Loading entries for habit:', habit.id)
         const entries = await getEntries({ data: { habitId: habit.id } })
         entriesData[habit.id] = entries
       }
       setEntriesMap(entriesData)
+      console.log('All data loaded successfully')
     } catch (error) {
       console.error('Failed to load data:', error)
-      toast.error('Failed to load habits')
+      toast.error(`Failed to load habits: ${error}`)
     } finally {
       setIsLoading(false)
     }
