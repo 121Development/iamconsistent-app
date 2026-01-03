@@ -1,42 +1,58 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import {
-  Zap,
-  Server,
-  Route as RouteIcon,
-  Shield,
-  Waves,
-  Sparkles,
-} from 'lucide-react'
-import { SignedIn, UserButton, SignedOut, SignInButton } from '@clerk/tanstack-react-start'
-import { createServerFn } from '@tanstack/react-start'
-import { auth } from '@clerk/tanstack-react-start/server'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
-
-const authStateFn = createServerFn({ method: 'GET' }).handler(async () => {
-  const { isAuthenticated, userId } = await auth()
-
-  if (!isAuthenticated) {
-    // This will error because you're redirecting to a path that doesn't exist yet
-    // You can create a sign-in route to handle this
-    // See https://clerk.com/docs/tanstack-react-start/guides/development/custom-sign-in-or-up-page
-    throw redirect({
-      to: '/sign-in',
-    })
-  }
-
-  return { userId }
+export const Route = createFileRoute('/')({
+  component: LandingPage,
 })
 
-export const Route = createFileRoute('/')({ component: App,
-  beforeLoad: async () => await authStateFn(),
-  loader: async ({ context }) => {
-    return { userId: context.userId }
-  },
- })
+function LandingPage() {
+  return (
+    <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-6">
+      <div className="max-w-4xl mx-auto text-center">
+        <div className="mb-8">
+          <CheckCircle2 className="h-20 w-20 text-emerald-400 mx-auto mb-6" />
+          <h1 className="text-5xl md:text-6xl font-bold text-neutral-100 mb-4 tracking-tight">
+            iamconsistent
+          </h1>
+          <p className="text-xl md:text-2xl text-neutral-400 mb-12">
+            Track your habits. Build consistency.
+          </p>
+        </div>
 
-function App() {
+        <Link
+          to="/create"
+          className="inline-flex items-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-semibold text-lg py-4 px-8 rounded transition-colors"
+        >
+          Track my first habit
+          <ArrowRight className="h-5 w-5" />
+        </Link>
 
-  const state = Route.useLoaderData()
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          <div className="border border-neutral-800 bg-neutral-900/50 p-6 rounded">
+            <div className="text-emerald-400 text-3xl mb-3">→</div>
+            <h3 className="text-neutral-100 font-semibold mb-2">Simple Tracking</h3>
+            <p className="text-neutral-500 text-sm">
+              Log your habits daily with a single click. No complexity, just consistency.
+            </p>
+          </div>
 
-  return <h1>Welcome! Your ID is {state.userId}!</h1>
+          <div className="border border-neutral-800 bg-neutral-900/50 p-6 rounded">
+            <div className="text-emerald-400 text-3xl mb-3">↑</div>
+            <h3 className="text-neutral-100 font-semibold mb-2">Track Streaks</h3>
+            <p className="text-neutral-500 text-sm">
+              Watch your streaks grow. Stay motivated by seeing your progress.
+            </p>
+          </div>
+
+          <div className="border border-neutral-800 bg-neutral-900/50 p-6 rounded">
+            <div className="text-emerald-400 text-3xl mb-3">✓</div>
+            <h3 className="text-neutral-100 font-semibold mb-2">Build Habits</h3>
+            <p className="text-neutral-500 text-sm">
+              Turn actions into habits. Consistency is the key to lasting change.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

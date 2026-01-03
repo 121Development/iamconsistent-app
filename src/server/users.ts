@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth, currentUser } from '@clerk/tanstack-react-start/server'
 import { eq } from 'drizzle-orm'
-import { getDbFromContext } from './db'
+import { getDb } from '../lib/db/client' 
 import { users } from '../lib/db'
 
 /**
@@ -19,7 +19,7 @@ export const syncUser = createServerFn({ method: 'POST' }).handler(async () => {
     throw new Error('User not found in Clerk')
   }
 
-  const db = getDbFromContext()
+  const db = getDb()
 
   // Check if user exists
   const [existingUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
@@ -65,7 +65,7 @@ export const getCurrentUser = createServerFn({ method: 'GET' }).handler(async ()
     throw new Error('Unauthorized')
   }
 
-  const db = getDbFromContext()
+  const db = getDb()
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
 

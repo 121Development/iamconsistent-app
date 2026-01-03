@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { eq, and } from 'drizzle-orm'
-import { getDbFromContext } from './db'
+import { getDb } from '../lib/db/client' 
 import { habits, users } from '../lib/db'
 import {
   createHabitSchema,
@@ -13,12 +13,10 @@ import { canCreateHabit } from '../lib/subscription'
 
 // Get all habits for the current user
 export const getHabits = createServerFn({ method: 'GET' }).handler(async () => {
-  const { userId } = await auth()
-  if (!userId) {
-    throw new Error('Unauthorized')
-  }
+  // Auth disabled - use demo user ID
+  const userId = 'demo-user'
 
-  const db = getDbFromContext()
+  const db = getDb()
 
   const userHabits = await db
     .select()
@@ -31,14 +29,12 @@ export const getHabits = createServerFn({ method: 'GET' }).handler(async () => {
 
 // Get a single habit by ID
 export const getHabit = createServerFn({ method: 'GET' })
-  .validator(getHabitSchema)
+  .inputValidator(getHabitSchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
     const [habit] = await db
       .select()
@@ -55,30 +51,14 @@ export const getHabit = createServerFn({ method: 'GET' })
 
 // Create a new habit
 export const createHabit = createServerFn({ method: 'POST' })
-  .validator(createHabitSchema)
+  .inputValidator(createHabitSchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
-    // Get user and check subscription limits
-    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
-    if (!user) {
-      throw new Error('User not found')
-    }
-
-    // Check habit count
-    const userHabits = await db
-      .select()
-      .from(habits)
-      .where(and(eq(habits.userId, userId), eq(habits.isArchived, false)))
-
-    if (!canCreateHabit(user, userHabits.length)) {
-      throw new Error('Habit limit reached. Upgrade to Pro for unlimited habits.')
-    }
+    // Skip subscription checks for demo
 
     // Validate target settings
     if ((data.targetCount && !data.targetPeriod) || (!data.targetCount && data.targetPeriod)) {
@@ -102,14 +82,12 @@ export const createHabit = createServerFn({ method: 'POST' })
 
 // Update a habit
 export const updateHabit = createServerFn({ method: 'POST' })
-  .validator(updateHabitSchema)
+  .inputValidator(updateHabitSchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
     // Verify ownership
     const [existingHabit] = await db
@@ -145,14 +123,12 @@ export const updateHabit = createServerFn({ method: 'POST' })
 
 // Delete (archive) a habit
 export const deleteHabit = createServerFn({ method: 'POST' })
-  .validator(deleteHabitSchema)
+  .inputValidator(deleteHabitSchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
     // Verify ownership
     const [existingHabit] = await db

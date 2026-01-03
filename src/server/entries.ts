@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { eq, and, gte, lte } from 'drizzle-orm'
-import { getDbFromContext } from './db'
+import { getDb } from '../lib/db/client' 
 import { entries, habits } from '../lib/db'
 import {
   createEntrySchema,
@@ -11,14 +11,12 @@ import {
 
 // Get all entries for a habit
 export const getEntries = createServerFn({ method: 'GET' })
-  .validator(getEntriesSchema)
+  .inputValidator(getEntriesSchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
     // Verify habit ownership
     const [habit] = await db
@@ -53,14 +51,12 @@ export const getEntries = createServerFn({ method: 'GET' })
 
 // Create a new entry
 export const createEntry = createServerFn({ method: 'POST' })
-  .validator(createEntrySchema)
+  .inputValidator(createEntrySchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
     // Verify habit ownership
     const [habit] = await db
@@ -99,14 +95,12 @@ export const createEntry = createServerFn({ method: 'POST' })
 
 // Delete an entry
 export const deleteEntry = createServerFn({ method: 'POST' })
-  .validator(deleteEntrySchema)
+  .inputValidator(deleteEntrySchema)
   .handler(async ({ data }) => {
-    const { userId } = await auth()
-    if (!userId) {
-      throw new Error('Unauthorized')
-    }
+    // Auth disabled - use demo user ID
+    const userId = 'demo-user'
 
-    const db = getDbFromContext()
+    const db = getDb()
 
     // Verify entry ownership
     const [existingEntry] = await db
