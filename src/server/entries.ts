@@ -70,16 +70,7 @@ export const createEntry = createServerFn({ method: 'POST' })
       throw new Error('Habit not found')
     }
 
-    // Check if entry already exists for this date
-    const [existingEntry] = await db
-      .select()
-      .from(entries)
-      .where(and(eq(entries.habitId, data.habitId), eq(entries.date, data.date)))
-      .limit(1)
-
-    if (existingEntry) {
-      throw new Error('Entry already exists for this date')
-    }
+    // Allow multiple entries per day - no uniqueness check
 
     const [newEntry] = await db
       .insert(entries)

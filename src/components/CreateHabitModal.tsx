@@ -1,16 +1,12 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { createHabit } from '../server/habits'
+import { toast } from 'sonner'
 
 interface CreateHabitModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreate: (data: {
-    name: string
-    icon: string
-    color: string
-    targetCount?: number
-    targetPeriod?: 'week' | 'month'
-  }) => Promise<void>
+  onSuccess: () => void
 }
 
 const ICON_OPTIONS = ['💪', '📚', '🏃', '🧘', '💻', '🎨', '🎵', '✍️', '🌱', '☕']
@@ -23,7 +19,7 @@ const COLOR_OPTIONS = [
   { name: 'cyan', class: 'bg-cyan-500' },
 ]
 
-export default function CreateHabitModal({ isOpen, onClose, onCreate }: CreateHabitModalProps) {
+export default function CreateHabitModal({ isOpen, onClose, onSuccess }: CreateHabitModalProps) {
   const [name, setName] = useState('')
   const [icon, setIcon] = useState('💪')
   const [color, setColor] = useState('emerald')
@@ -40,12 +36,16 @@ export default function CreateHabitModal({ isOpen, onClose, onCreate }: CreateHa
 
     setIsLoading(true)
     try {
-      await onCreate({
-        name: name.trim(),
-        icon,
-        color,
-        ...(useTarget && { targetCount, targetPeriod }),
+      await createHabit({
+        data: {
+          name: name.trim(),
+          icon,
+          color,
+          ...(useTarget && { targetCount, targetPeriod }),
+        }
       })
+
+      toast.success('Habit created!')
 
       // Reset form
       setName('')
@@ -55,6 +55,9 @@ export default function CreateHabitModal({ isOpen, onClose, onCreate }: CreateHa
       setTargetCount(3)
       setTargetPeriod('week')
       onClose()
+      onSuccess()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create habit')
     } finally {
       setIsLoading(false)
     }

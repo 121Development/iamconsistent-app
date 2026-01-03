@@ -5,7 +5,8 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import HabitCard from '../components/HabitCard'
 import CreateHabitModal from '../components/CreateHabitModal'
-import { getHabits, getEntries, createHabit, createEntry, deleteEntry } from '../server'
+import { getHabits, getEntries } from '../server'
+import { initDemoUser } from '../server/init'
 
 export const Route = createFileRoute('/create')({
   component: Dashboard,
@@ -24,6 +25,9 @@ function Dashboard() {
 
   async function loadData() {
     try {
+      // Initialize demo user first
+      await initDemoUser()
+
       console.log('Loading habits...')
       const habitsData = await getHabits()
       console.log('Habits loaded:', habitsData)
@@ -46,52 +50,6 @@ function Dashboard() {
     }
   }
 
-  async function handleCreateHabit(data: {
-    name: string
-    icon: string
-    color: string
-    targetCount?: number
-    targetPeriod?: 'week' | 'month'
-  }) {
-    try {
-      const newHabit = await createHabit({ data })
-      setHabits([...habits, newHabit])
-      setEntriesMap({ ...entriesMap, [newHabit.id]: [] })
-      toast.success('Habit created!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create habit')
-      throw error
-    }
-  }
-
-  async function handleLogEntry(habitId: string, date: string) {
-    try {
-      const newEntry = await createEntry({ data: { habitId, date } })
-      setEntriesMap({
-        ...entriesMap,
-        [habitId]: [...(entriesMap[habitId] || []), newEntry],
-      })
-      toast.success('Entry logged!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to log entry')
-    }
-  }
-
-  async function handleDeleteEntry(entryId: string) {
-    try {
-      await deleteEntry({ data: { id: entryId } })
-
-      // Find and remove the entry from the map
-      const newEntriesMap = { ...entriesMap }
-      for (const habitId in newEntriesMap) {
-        newEntriesMap[habitId] = newEntriesMap[habitId].filter(e => e.id !== entryId)
-      }
-      setEntriesMap(newEntriesMap)
-      toast.success('Entry deleted!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete entry')
-    }
-  }
 
   if (isLoading) {
     return (
@@ -141,8 +99,7 @@ function Dashboard() {
                 key={habit.id}
                 habit={habit}
                 entries={entriesMap[habit.id] || []}
-                onLogEntry={handleLogEntry}
-                onDeleteEntry={handleDeleteEntry}
+                onUpdate={loadData}
               />
             ))}
           </div>
@@ -152,7 +109,7 @@ function Dashboard() {
       <CreateHabitModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={handleCreateHabit}
+        onSuccess={loadData}
       />
     </div>
   )
