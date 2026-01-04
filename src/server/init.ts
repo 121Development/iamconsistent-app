@@ -38,6 +38,7 @@ export const syncUser = createServerFn({ method: 'GET' }).handler(async () => {
         id: userId,
         email: email,
         subscriptionTier: 'free',
+        emailNotifications: true,
       })
       console.log('User synced to database:', userId, email)
     }

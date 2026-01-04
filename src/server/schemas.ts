@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+// User schemas
+export const updateEmailNotificationsSchema = z.object({
+  enabled: z.boolean(),
+})
+
 // Habit schemas
 export const createHabitSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),

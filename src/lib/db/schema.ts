@@ -9,6 +9,9 @@ export const users = sqliteTable('users', {
   subscriptionTier: text('subscription_tier', { enum: ['free', 'pro'] })
     .notNull()
     .default('free'),
+  emailNotifications: integer('email_notifications', { mode: 'boolean' })
+    .notNull()
+    .default(true),
   createdAt: text('created_at')
     .notNull()
     .default(sql`(datetime('now'))`),

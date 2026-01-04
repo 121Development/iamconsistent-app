@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
 import HabitMilestones from '../components/HabitMilestones'
+import SettingsPanel from '../components/SettingsPanel'
 import CreateHabitModal from '../components/CreateHabitModal'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import { useHabits } from '../hooks/useHabits'
@@ -71,10 +72,11 @@ function DashboardContent() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-neutral-100 mb-1">
-              {format(new Date(), 'EEEE, MMMM d')}
+              {format(new Date(), 'EEE, MMM d')}
             </h1>
             <p className="text-sm text-neutral-500">
-              Track your habits and build consistency
+              Track your habits. <br />
+              Build consistency.
             </p>
           </div>
 
@@ -113,6 +115,8 @@ function DashboardContent() {
         <HabitCalendar habits={habits} entriesMap={entriesMap} />
 
         <HabitMilestones habits={habits} entriesMap={entriesMap} />
+
+        <SettingsPanel />
 
         <CreateHabitModal
           isOpen={isModalOpen}

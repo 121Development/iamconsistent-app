@@ -67,23 +67,29 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
     <div className="border border-neutral-800 bg-neutral-900/50 rounded p-6 mt-8">
       <h2 className="text-lg font-bold text-neutral-100 mb-4">Activity</h2>
 
-      <div className="flex gap-4">
-        {/* Fixed habit names column */}
-        <div className="space-y-4 flex-shrink-0">
+      <div className="flex gap-2 md:gap-4">
+        {/* Fixed habit icons/names column */}
+        <div className="space-y-4 flex-shrink-0 pt-8 pb-2">
           {habits.map((habit) => {
             const colors = getHabitColor(habit.color)
             return (
-              <div key={habit.id} className="flex items-center gap-2 h-3">
+              <div key={habit.id} className="flex items-center gap-2 h-3 group">
                 <div
-                  className="w-6 h-6 rounded flex items-center justify-center text-sm border"
+                  className="w-6 h-6 rounded flex items-center justify-center text-sm border relative"
                   style={{
                     backgroundColor: colors.bg,
                     borderColor: colors.border,
                   }}
+                  title={habit.name}
                 >
                   {habit.icon}
+                  {/* Mobile tooltip */}
+                  <div className="md:hidden absolute left-full ml-2 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                    {habit.name}
+                  </div>
                 </div>
-                <span className="text-sm text-neutral-300 truncate w-32">{habit.name}</span>
+                {/* Desktop name - hidden on mobile */}
+                <span className="hidden md:block text-sm text-neutral-300 truncate w-32">{habit.name}</span>
               </div>
             )
           })}
