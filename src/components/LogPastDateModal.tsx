@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { format } from 'date-fns'
-import { createEntry } from '../server/entries'
+import { useCreateEntry } from '../hooks/useEntries'
 import { toast } from 'sonner'
 
 interface LogPastDateModalProps {
@@ -9,7 +9,6 @@ interface LogPastDateModalProps {
   onClose: () => void
   habitId: string
   habitName: string
-  onSuccess: () => void
 }
 
 export default function LogPastDateModal({
@@ -17,27 +16,28 @@ export default function LogPastDateModal({
   onClose,
   habitId,
   habitName,
-  onSuccess,
 }: LogPastDateModalProps) {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [isLoading, setIsLoading] = useState(false)
+
+  const createEntryMutation = useCreateEntry()
 
   if (!isOpen) return null
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    setIsLoading(true)
-    try {
-      await createEntry({ data: { habitId, date: selectedDate } })
-      toast.success(`Entry logged for ${selectedDate}`)
-      onClose()
-      onSuccess()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to log entry')
-    } finally {
-      setIsLoading(false)
-    }
+    createEntryMutation.mutate(
+      {
+        habitId,
+        date: selectedDate,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Entry logged for ${selectedDate}`)
+          onClose()
+        },
+      }
+    )
   }
 
   return (
@@ -78,10 +78,10 @@ export default function LogPastDateModal({
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={createEntryMutation.isPending}
               className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-800 disabled:text-neutral-600 text-neutral-950 font-medium py-2.5 px-4 rounded transition-colors"
             >
-              {isLoading ? 'Logging...' : 'Log Entry'}
+              {createEntryMutation.isPending ? 'Logging...' : 'Log Entry'}
             </button>
           </div>
         </form>

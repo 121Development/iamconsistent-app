@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Habit, Entry } from '../lib/db'
 import { format, eachDayOfInterval, startOfDay, parseISO } from 'date-fns'
+import { getHabitColor } from '../lib/colors'
 
 interface HabitCalendarProps {
   habits: Habit[]
@@ -51,13 +52,18 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
       <div className="space-y-4 overflow-x-auto">
         {habits.map((habit) => {
           const days = getDaysForHabit(habit.id)
+          const colors = getHabitColor(habit.color)
 
           return (
             <div key={habit.id} className="flex items-center gap-3 min-w-0">
               {/* Habit name and icon */}
               <div className="flex items-center gap-2 w-48 flex-shrink-0">
                 <div
-                  className={`w-6 h-6 rounded flex items-center justify-center text-sm bg-${habit.color}-950 border border-${habit.color}-800`}
+                  className="w-6 h-6 rounded flex items-center justify-center text-sm border"
+                  style={{
+                    backgroundColor: colors.bg,
+                    borderColor: colors.border,
+                  }}
                 >
                   {habit.icon}
                 </div>

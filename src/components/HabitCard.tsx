@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Plus, Minus } from 'lucide-react'
 import type { Habit, Entry } from '../lib/db'
 import { format } from 'date-fns'
-import { createEntry, deleteEntry } from '../server/entries'
-import { toast } from 'sonner'
+import { useCreateEntry, useDeleteEntry } from '../hooks/useEntries'
+import { getHabitColor } from '../lib/colors'
 import LogPastDateModal from './LogPastDateModal'
 import RemoveEntryModal from './RemoveEntryModal'
 import EditHabitModal from './EditHabitModal'
@@ -11,48 +11,35 @@ import EditHabitModal from './EditHabitModal'
 interface HabitCardProps {
   habit: Habit
   entries: Entry[]
-  onUpdate: () => void
 }
 
-export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) {
-  const [isLoading, setIsLoading] = useState(false)
+export default function HabitCard({ habit, entries }: HabitCardProps) {
   const [isPastDateModalOpen, setIsPastDateModalOpen] = useState(false)
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const createEntryMutation = useCreateEntry()
+  const deleteEntryMutation = useDeleteEntry()
+
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayEntries = entries.filter(e => e.date === today)
   const todayCount = todayEntries.length
 
-  const handleIncrement = async () => {
-    setIsLoading(true)
-    try {
-      await createEntry({ data: { habitId: habit.id, date: today } })
-      toast.success('Entry logged!')
-      onUpdate()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to log entry')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleIncrement = () => {
+    createEntryMutation.mutate({
+      habitId: habit.id,
+      date: today,
+    })
   }
 
-  const handleDecrement = async () => {
+  const handleDecrement = () => {
     if (todayCount === 0) return
-
-    // Delete the most recent entry for today
     const lastEntry = todayEntries[todayEntries.length - 1]
-
-    setIsLoading(true)
-    try {
-      await deleteEntry({ data: { id: lastEntry.id } })
-      toast.success('Entry removed!')
-      onUpdate()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete entry')
-    } finally {
-      setIsLoading(false)
-    }
+    deleteEntryMutation.mutate(lastEntry.id)
   }
+
+  const isLoading = createEntryMutation.isPending || deleteEntryMutation.isPending
+  const colors = getHabitColor(habit.color)
 
   // Calculate simple streak (consecutive days)
   const calculateStreak = () => {
@@ -87,7 +74,11 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded flex items-center justify-center text-2xl bg-${habit.color}-950 border border-${habit.color}-800`}
+              className="w-10 h-10 rounded flex items-center justify-center text-2xl border"
+              style={{
+                backgroundColor: colors.bg,
+                borderColor: colors.border,
+              }}
             >
               {habit.icon}
             </div>
@@ -100,13 +91,6 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleDecrement}
-              disabled={isLoading || todayCount === 0}
-              className="w-10 h-10 rounded bg-transparent hover:bg-neutral-800/50 disabled:bg-transparent disabled:text-neutral-800 text-neutral-500 hover:text-neutral-300 font-bold flex items-center justify-center transition-colors"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
 
             <div className="w-12 text-center">
               <div className="text-2xl font-bold text-emerald-400">{todayCount}</div>
@@ -129,12 +113,14 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
           >
             edit
           </button>
+          |
           <button
             onClick={() => setIsRemoveModalOpen(true)}
             className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
           >
-            remove date
+            remove entry
           </button>
+          |
           <button
             onClick={() => setIsPastDateModalOpen(true)}
             className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
@@ -149,7 +135,6 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         habit={habit}
-        onSuccess={onUpdate}
       />
 
       <LogPastDateModal
@@ -157,7 +142,6 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
         onClose={() => setIsPastDateModalOpen(false)}
         habitId={habit.id}
         habitName={habit.name}
-        onSuccess={onUpdate}
       />
 
       <RemoveEntryModal
@@ -165,7 +149,6 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
         onClose={() => setIsRemoveModalOpen(false)}
         habitName={habit.name}
         entries={entries}
-        onSuccess={onUpdate}
       />
     </>
   )

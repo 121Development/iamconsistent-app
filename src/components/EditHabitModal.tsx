@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import type { Habit } from '../lib/db'
-import { updateHabit, deleteHabit } from '../server/habits'
-import { toast } from 'sonner'
+import { useUpdateHabit, useDeleteHabit } from '../hooks/useHabits'
 
 interface EditHabitModalProps {
   isOpen: boolean
   onClose: () => void
   habit: Habit
-  onSuccess: () => void
 }
 
 const ICON_OPTIONS = ['💪', '📚', '🏃', '🧘', '💻', '🎨', '🎵', '✍️', '🌱', '☕']
@@ -21,12 +19,14 @@ const COLOR_OPTIONS = [
   { name: 'cyan', class: 'bg-cyan-500' },
 ]
 
-export default function EditHabitModal({ isOpen, onClose, habit, onSuccess }: EditHabitModalProps) {
+export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModalProps) {
   const [name, setName] = useState(habit.name)
   const [icon, setIcon] = useState(habit.icon)
   const [color, setColor] = useState(habit.color)
-  const [isLoading, setIsLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const updateHabitMutation = useUpdateHabit()
+  const deleteHabitMutation = useDeleteHabit()
 
   // Update form when habit changes
   useEffect(() => {
@@ -37,45 +37,35 @@ export default function EditHabitModal({ isOpen, onClose, habit, onSuccess }: Ed
 
   if (!isOpen) return null
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
 
-    setIsLoading(true)
-    try {
-      await updateHabit({
-        data: {
-          id: habit.id,
-          name: name.trim(),
-          icon,
-          color,
-        }
-      })
-
-      toast.success('Habit updated!')
-      onClose()
-      onSuccess()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update habit')
-    } finally {
-      setIsLoading(false)
-    }
+    updateHabitMutation.mutate(
+      {
+        id: habit.id,
+        name: name.trim(),
+        icon,
+        color,
+      },
+      {
+        onSuccess: () => {
+          onClose()
+        },
+      }
+    )
   }
 
-  const handleDelete = async () => {
-    setIsLoading(true)
-    try {
-      await deleteHabit({ data: { id: habit.id } })
-      toast.success('Habit deleted!')
-      setShowDeleteConfirm(false)
-      onClose()
-      onSuccess()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete habit')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleDelete = () => {
+    deleteHabitMutation.mutate(habit.id, {
+      onSuccess: () => {
+        setShowDeleteConfirm(false)
+        onClose()
+      },
+    })
   }
+
+  const isLoading = updateHabitMutation.isPending || deleteHabitMutation.isPending
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">

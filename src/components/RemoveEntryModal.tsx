@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Minus } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import type { Entry } from '../lib/db'
-import { deleteEntry } from '../server/entries'
+import { useDeleteEntry } from '../hooks/useEntries'
 import { toast } from 'sonner'
 
 interface RemoveEntryModalProps {
@@ -10,7 +10,6 @@ interface RemoveEntryModalProps {
   onClose: () => void
   habitName: string
   entries: Entry[]
-  onSuccess: () => void
 }
 
 export default function RemoveEntryModal({
@@ -18,9 +17,10 @@ export default function RemoveEntryModal({
   onClose,
   habitName,
   entries,
-  onSuccess,
 }: RemoveEntryModalProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const deleteEntryMutation = useDeleteEntry()
 
   if (!isOpen) return null
 
@@ -36,17 +36,17 @@ export default function RemoveEntryModal({
   // Sort dates in descending order (most recent first)
   const sortedDates = Object.keys(entriesByDate).sort((a, b) => b.localeCompare(a))
 
-  const handleDelete = async (entryId: string, date: string) => {
+  const handleDelete = (entryId: string, date: string) => {
     setDeletingId(entryId)
-    try {
-      await deleteEntry({ data: { id: entryId } })
-      toast.success(`Entry removed for ${date}`)
-      onSuccess()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete entry')
-    } finally {
-      setDeletingId(null)
-    }
+    deleteEntryMutation.mutate(entryId, {
+      onSuccess: () => {
+        toast.success(`Entry removed for ${date}`)
+        setDeletingId(null)
+      },
+      onError: () => {
+        setDeletingId(null)
+      },
+    })
   }
 
   return (

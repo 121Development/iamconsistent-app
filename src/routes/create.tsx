@@ -2,11 +2,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { format } from 'date-fns'
-import { toast } from 'sonner'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
 import CreateHabitModal from '../components/CreateHabitModal'
-import { getHabits, getEntries } from '../server'
+import { useHabits } from '../hooks/useHabits'
+import { useMultipleHabitEntries } from '../hooks/useEntries'
 import { initDemoUser } from '../server/init'
 
 export const Route = createFileRoute('/create')({
@@ -15,42 +15,25 @@ export const Route = createFileRoute('/create')({
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [habits, setHabits] = useState<any[]>([])
-  const [entriesMap, setEntriesMap] = useState<Record<string, any[]>>({})
-  const [isLoading, setIsLoading] = useState(true)
 
-  // Load habits and entries
+  // Initialize demo user on mount
   useEffect(() => {
-    loadData()
+    initDemoUser()
   }, [])
 
-  async function loadData() {
-    try {
-      // Initialize demo user first
-      await initDemoUser()
+  // Fetch habits using useQuery
+  const { data: habits = [], isLoading: habitsLoading } = useHabits()
 
-      console.log('Loading habits...')
-      const habitsData = await getHabits()
-      console.log('Habits loaded:', habitsData)
-      setHabits(habitsData)
+  // Fetch entries for all habits using useQueries
+  const entriesQueries = useMultipleHabitEntries(habits.map((h) => h.id))
 
-      // Load entries for each habit
-      const entriesData: Record<string, any[]> = {}
-      for (const habit of habitsData) {
-        console.log('Loading entries for habit:', habit.id)
-        const entries = await getEntries({ data: { habitId: habit.id } })
-        entriesData[habit.id] = entries
-      }
-      setEntriesMap(entriesData)
-      console.log('All data loaded successfully')
-    } catch (error) {
-      console.error('Failed to load data:', error)
-      toast.error(`Failed to load habits: ${error}`)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Build entries map from queries
+  const entriesMap = habits.reduce((acc, habit, index) => {
+    acc[habit.id] = entriesQueries[index]?.data || []
+    return acc
+  }, {} as Record<string, any[]>)
 
+  const isLoading = habitsLoading || entriesQueries.some((q) => q.isLoading)
 
   if (isLoading) {
     return (
@@ -100,7 +83,6 @@ function Dashboard() {
                 key={habit.id}
                 habit={habit}
                 entries={entriesMap[habit.id] || []}
-                onUpdate={loadData}
               />
             ))}
           </div>
@@ -111,7 +93,6 @@ function Dashboard() {
         <CreateHabitModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={loadData}
         />
       </div>
     </div>

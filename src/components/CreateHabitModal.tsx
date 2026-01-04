@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { createHabit } from '../server/habits'
-import { toast } from 'sonner'
+import { useCreateHabit } from '../hooks/useHabits'
 
 interface CreateHabitModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
 }
 
 const ICON_OPTIONS = ['💪', '📚', '🏃', '🧘', '💻', '🎨', '🎵', '✍️', '🌱', '☕']
@@ -19,48 +17,42 @@ const COLOR_OPTIONS = [
   { name: 'cyan', class: 'bg-cyan-500' },
 ]
 
-export default function CreateHabitModal({ isOpen, onClose, onSuccess }: CreateHabitModalProps) {
+export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalProps) {
   const [name, setName] = useState('')
   const [icon, setIcon] = useState('💪')
   const [color, setColor] = useState('emerald')
   const [useTarget, setUseTarget] = useState(false)
   const [targetCount, setTargetCount] = useState(3)
   const [targetPeriod, setTargetPeriod] = useState<'week' | 'month'>('week')
-  const [isLoading, setIsLoading] = useState(false)
+
+  const createHabitMutation = useCreateHabit()
 
   if (!isOpen) return null
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
 
-    setIsLoading(true)
-    try {
-      await createHabit({
-        data: {
-          name: name.trim(),
-          icon,
-          color,
-          ...(useTarget && { targetCount, targetPeriod }),
-        }
-      })
-
-      toast.success('Habit created!')
-
-      // Reset form
-      setName('')
-      setIcon('💪')
-      setColor('emerald')
-      setUseTarget(false)
-      setTargetCount(3)
-      setTargetPeriod('week')
-      onClose()
-      onSuccess()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create habit')
-    } finally {
-      setIsLoading(false)
-    }
+    createHabitMutation.mutate(
+      {
+        name: name.trim(),
+        icon,
+        color,
+        ...(useTarget && { targetCount, targetPeriod }),
+      },
+      {
+        onSuccess: () => {
+          // Reset form
+          setName('')
+          setIcon('💪')
+          setColor('emerald')
+          setUseTarget(false)
+          setTargetCount(3)
+          setTargetPeriod('week')
+          onClose()
+        },
+      }
+    )
   }
 
   return (
@@ -183,10 +175,10 @@ export default function CreateHabitModal({ isOpen, onClose, onSuccess }: CreateH
             </button>
             <button
               type="submit"
-              disabled={!name.trim() || isLoading}
+              disabled={!name.trim() || createHabitMutation.isPending}
               className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-800 disabled:text-neutral-600 text-neutral-950 font-medium py-2.5 px-4 rounded transition-colors"
             >
-              {isLoading ? 'Creating...' : 'Create Habit'}
+              {createHabitMutation.isPending ? 'Creating...' : 'Create Habit'}
             </button>
           </div>
         </form>
