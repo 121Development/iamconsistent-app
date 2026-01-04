@@ -5,6 +5,8 @@ import { format } from 'date-fns'
 import { createEntry, deleteEntry } from '../server/entries'
 import { toast } from 'sonner'
 import LogPastDateModal from './LogPastDateModal'
+import RemoveEntryModal from './RemoveEntryModal'
+import EditHabitModal from './EditHabitModal'
 
 interface HabitCardProps {
   habit: Habit
@@ -15,6 +17,8 @@ interface HabitCardProps {
 export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isPastDateModalOpen, setIsPastDateModalOpen] = useState(false)
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayEntries = entries.filter(e => e.date === today)
   const todayCount = todayEntries.length
@@ -23,6 +27,7 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
     setIsLoading(true)
     try {
       await createEntry({ data: { habitId: habit.id, date: today } })
+      toast.success('Entry logged!')
       onUpdate()
     } catch (error: any) {
       toast.error(error.message || 'Failed to log entry')
@@ -40,6 +45,7 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
     setIsLoading(true)
     try {
       await deleteEntry({ data: { id: lastEntry.id } })
+      toast.success('Entry removed!')
       onUpdate()
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete entry')
@@ -52,12 +58,15 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
   const calculateStreak = () => {
     if (entries.length === 0) return 0
 
-    const sortedEntries = [...entries].sort((a, b) => b.date.localeCompare(a.date))
+    // Get unique dates only (handle multiple entries per day)
+    const uniqueDates = Array.from(new Set(entries.map(e => e.date))).sort((a, b) => b.localeCompare(a))
+
     let streak = 0
     let currentDate = new Date()
+    currentDate.setHours(0, 0, 0, 0) // Normalize to start of day
 
-    for (const entry of sortedEntries) {
-      const entryDate = new Date(entry.date)
+    for (const dateStr of uniqueDates) {
+      const entryDate = new Date(dateStr + 'T00:00:00')
       const diffDays = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
 
       if (diffDays === streak) {
@@ -113,19 +122,49 @@ export default function HabitCard({ habit, entries, onUpdate }: HabitCardProps) 
           </div>
         </div>
 
-        <button
-          onClick={() => setIsPastDateModalOpen(true)}
-          className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
-        >
-          log earlier date
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            edit
+          </button>
+          <button
+            onClick={() => setIsRemoveModalOpen(true)}
+            className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            remove date
+          </button>
+          <button
+            onClick={() => setIsPastDateModalOpen(true)}
+            className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            log earlier date
+          </button>
+          
+        </div>
       </div>
+
+      <EditHabitModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        habit={habit}
+        onSuccess={onUpdate}
+      />
 
       <LogPastDateModal
         isOpen={isPastDateModalOpen}
         onClose={() => setIsPastDateModalOpen(false)}
         habitId={habit.id}
         habitName={habit.name}
+        onSuccess={onUpdate}
+      />
+
+      <RemoveEntryModal
+        isOpen={isRemoveModalOpen}
+        onClose={() => setIsRemoveModalOpen(false)}
+        habitName={habit.name}
+        entries={entries}
         onSuccess={onUpdate}
       />
     </>

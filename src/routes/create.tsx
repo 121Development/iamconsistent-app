@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import HabitCard from '../components/HabitCard'
+import HabitCalendar from '../components/HabitCalendar'
 import CreateHabitModal from '../components/CreateHabitModal'
 import { getHabits, getEntries } from '../server'
 import { initDemoUser } from '../server/init'
@@ -104,13 +105,15 @@ function Dashboard() {
             ))}
           </div>
         )}
-      </div>
 
-      <CreateHabitModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={loadData}
-      />
+        <HabitCalendar habits={habits} entriesMap={entriesMap} />
+
+        <CreateHabitModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={loadData}
+        />
+      </div>
     </div>
   )
 }
