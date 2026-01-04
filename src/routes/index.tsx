@@ -20,7 +20,7 @@ function LandingPage() {
         </div>
 
         <Link
-          to="/create"
+          to="/myhabits"
           className="inline-flex items-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-semibold text-lg py-4 px-8 rounded transition-colors"
         >
           Track my first habit

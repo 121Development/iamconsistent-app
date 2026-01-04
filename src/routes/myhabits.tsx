@@ -9,7 +9,7 @@ import { useHabits } from '../hooks/useHabits'
 import { useMultipleHabitEntries } from '../hooks/useEntries'
 import { initDemoUser } from '../server/init'
 
-export const Route = createFileRoute('/create')({
+export const Route = createFileRoute('/myhabits')({
   component: Dashboard,
 })
 

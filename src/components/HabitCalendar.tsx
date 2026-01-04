@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import type { Habit, Entry } from '../lib/db'
 import { format, eachDayOfInterval, startOfDay, parseISO } from 'date-fns'
 import { getHabitColor } from '../lib/colors'
@@ -10,23 +10,41 @@ interface HabitCalendarProps {
 
 export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps) {
   const [hoveredCell, setHoveredCell] = useState<{ habitId: string; date: string } | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  // Get days for a specific habit (from first entry to today)
-  const getDaysForHabit = (habitId: string): Date[] => {
-    const entries = entriesMap[habitId] || []
+  // Scroll to the right (latest entries) on mount and when data changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth
+    }
+  }, [habits, entriesMap])
 
-    if (entries.length === 0) {
-      // If no entries, just show today
-      return [startOfDay(new Date())]
+  // Find the earliest entry date across ALL habits
+  const getEarliestDate = (): Date => {
+    let earliestDate: Date | null = null
+
+    for (const habit of habits) {
+      const entries = entriesMap[habit.id] || []
+      if (entries.length > 0) {
+        const sortedEntries = [...entries].sort((a, b) => a.date.localeCompare(b.date))
+        const firstEntryDate = parseISO(sortedEntries[0].date)
+
+        if (!earliestDate || firstEntryDate < earliestDate) {
+          earliestDate = firstEntryDate
+        }
+      }
     }
 
-    // Find earliest entry date
-    const sortedEntries = [...entries].sort((a, b) => a.date.localeCompare(b.date))
-    const firstEntryDate = parseISO(sortedEntries[0].date)
-    const today = startOfDay(new Date())
-
-    return eachDayOfInterval({ start: firstEntryDate, end: today })
+    // If no entries exist, return today
+    return earliestDate || startOfDay(new Date())
   }
+
+  // Get all days from earliest entry to today (same for all habits)
+  const allDays = useMemo(() => {
+    const startDate = getEarliestDate()
+    const today = startOfDay(new Date())
+    return eachDayOfInterval({ start: startDate, end: today })
+  }, [habits, entriesMap])
 
   // Get entry count for a specific habit and date
   const getEntryCount = (habitId: string, date: Date): number => {
@@ -49,15 +67,13 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
     <div className="border border-neutral-800 bg-neutral-900/50 rounded p-6 mt-8">
       <h2 className="text-lg font-bold text-neutral-100 mb-4">Activity</h2>
 
-      <div className="space-y-4 overflow-x-auto">
-        {habits.map((habit) => {
-          const days = getDaysForHabit(habit.id)
-          const colors = getHabitColor(habit.color)
-
-          return (
-            <div key={habit.id} className="flex items-center gap-3 min-w-0">
-              {/* Habit name and icon */}
-              <div className="flex items-center gap-2 w-48 flex-shrink-0">
+      <div className="flex gap-4">
+        {/* Fixed habit names column */}
+        <div className="space-y-4 flex-shrink-0">
+          {habits.map((habit) => {
+            const colors = getHabitColor(habit.color)
+            return (
+              <div key={habit.id} className="flex items-center gap-2 h-3">
                 <div
                   className="w-6 h-6 rounded flex items-center justify-center text-sm border"
                   style={{
@@ -67,12 +83,18 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
                 >
                   {habit.icon}
                 </div>
-                <span className="text-sm text-neutral-300 truncate">{habit.name}</span>
+                <span className="text-sm text-neutral-300 truncate w-32">{habit.name}</span>
               </div>
+            )
+          })}
+        </div>
 
-              {/* Calendar grid */}
-              <div className="flex gap-1 flex-shrink-0">
-                {days.map((day) => {
+        {/* Scrollable calendar grid */}
+        <div ref={scrollContainerRef} className="overflow-x-auto flex-1">
+          <div className="space-y-4">
+            {habits.map((habit) => (
+              <div key={habit.id} className="flex gap-1 h-3">
+                {allDays.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd')
                   const count = getEntryCount(habit.id, day)
                   const isHovered = hoveredCell?.habitId === habit.id && hoveredCell?.date === dateStr
@@ -101,9 +123,9 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
                   )
                 })}
               </div>
-            </div>
-          )
-        })}
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Legend */}
@@ -118,3 +140,5 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
     </div>
   )
 }
+
+//<span className="text-sm text-neutral-300 truncate">{habit.name}</span>
