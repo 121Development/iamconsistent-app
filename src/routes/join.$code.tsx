@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@clerk/tanstack-react-start'
 import { useMutation } from '@tanstack/react-query'
 import { joinSharedHabit } from '../server/shared-habits'
+import { syncUser } from '../server/init'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 
 export const Route = createFileRoute('/join/$code')({
@@ -34,21 +35,35 @@ function JoinPage() {
   })
 
   useEffect(() => {
-    if (!isLoaded) return
+    const attemptJoin = async () => {
+      if (!isLoaded) return
 
-    if (!userId) {
-      // Redirect to sign in with return URL
-      navigate({ to: '/sign-in' })
-      return
+      if (!userId) {
+        // Redirect to sign in with return URL
+        navigate({ to: '/sign-in' })
+        return
+      }
+
+      // User is authenticated - sync user to database first
+      try {
+        await syncUser()
+      } catch (error) {
+        console.error('Failed to sync user:', error)
+        setStatus('error')
+        setErrorMessage('Failed to sync user account. Please try again.')
+        return
+      }
+
+      // Now attempt to join the shared habit
+      if (code && code.length === 8) {
+        joinMutation.mutate()
+      } else {
+        setStatus('error')
+        setErrorMessage('Invalid invite code')
+      }
     }
 
-    // User is authenticated, attempt to join
-    if (code && code.length === 8) {
-      joinMutation.mutate()
-    } else {
-      setStatus('error')
-      setErrorMessage('Invalid invite code')
-    }
+    attemptJoin()
   }, [isLoaded, userId, code])
 
   return (

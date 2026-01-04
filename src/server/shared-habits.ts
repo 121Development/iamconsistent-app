@@ -185,6 +185,47 @@ export const joinSharedHabit = createServerFn({ method: 'POST' })
     }
   })
 
+// Get shared habit details (including invite code)
+export const getSharedHabitDetails = createServerFn({ method: 'GET' })
+  .inputValidator(sharedHabitIdSchema)
+  .handler(async ({ data }) => {
+    const userId = await requireAuth()
+    const db = createDb(env.DB)
+
+    // Verify user is a member
+    const [membership] = await db
+      .select()
+      .from(sharedHabitMembers)
+      .where(
+        and(
+          eq(sharedHabitMembers.sharedHabitId, data.sharedHabitId),
+          eq(sharedHabitMembers.userId, userId)
+        )
+      )
+      .limit(1)
+
+    if (!membership) {
+      throw new Error('You are not a member of this shared habit')
+    }
+
+    // Get shared habit details
+    const [sharedHabit] = await db
+      .select()
+      .from(sharedHabits)
+      .where(eq(sharedHabits.id, data.sharedHabitId))
+      .limit(1)
+
+    if (!sharedHabit) {
+      throw new Error('Shared habit not found')
+    }
+
+    return {
+      inviteCode: sharedHabit.inviteCode,
+      shareUrl: `https://iamconsistent.io/join/${sharedHabit.inviteCode}`,
+      ownerUserId: sharedHabit.ownerUserId,
+    }
+  })
+
 // Get members of a shared habit with their stats
 export const getSharedHabitMembers = createServerFn({ method: 'GET' })
   .inputValidator(sharedHabitIdSchema)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, ArrowRight } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { joinSharedHabit } from '../server/shared-habits'
+import { syncUser } from '../server/init'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -34,13 +35,23 @@ export default function JoinHabitModal({
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmedCode = code.trim().toUpperCase()
     if (trimmedCode.length !== 8) {
       toast.error('Invite code must be 8 characters')
       return
     }
+
+    // Sync user to database first to ensure they exist
+    try {
+      await syncUser()
+    } catch (error) {
+      console.error('Failed to sync user:', error)
+      toast.error('Failed to sync user account. Please try again.')
+      return
+    }
+
     joinMutation.mutate(trimmedCode)
   }
 

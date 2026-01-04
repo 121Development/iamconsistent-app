@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Copy, Check, Users, RefreshCw, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createSharedHabit,
+  getSharedHabitDetails,
   getSharedHabitMembers,
   regenerateInviteCode,
   removeMember,
@@ -32,6 +33,16 @@ export default function ShareHabitModal({ isOpen, onClose, habit }: ShareHabitMo
     },
   })
 
+  // Get shared habit details (invite code, etc.) if already shared
+  const { data: sharedHabitDetails } = useQuery({
+    queryKey: ['shared-habit-details', habit.sharedHabitId],
+    queryFn: () =>
+      habit.sharedHabitId
+        ? getSharedHabitDetails({ data: { sharedHabitId: habit.sharedHabitId } })
+        : Promise.resolve(null),
+    enabled: isOpen && habit.isShared && !!habit.sharedHabitId,
+  })
+
   // Get members if already shared
   const { data: members } = useQuery({
     queryKey: ['shared-habit-members', habit.sharedHabitId],
@@ -48,6 +59,7 @@ export default function ShareHabitModal({ isOpen, onClose, habit }: ShareHabitMo
       regenerateInviteCode({ data: { sharedHabitId: habit.sharedHabitId! } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] })
+      queryClient.invalidateQueries({ queryKey: ['shared-habit-details', habit.sharedHabitId] })
       toast.success('New invite code generated')
     },
     onError: (error: any) => {
@@ -97,9 +109,9 @@ export default function ShareHabitModal({ isOpen, onClose, habit }: ShareHabitMo
 
   if (!isOpen) return null
 
-  // Get invite code from createSharedMutation result or fetch from habit
-  const inviteCode = createSharedMutation.data?.inviteCode
-  const shareUrl = createSharedMutation.data?.shareUrl
+  // Get invite code from mutation result (when first creating) or from query (when already shared)
+  const inviteCode = createSharedMutation.data?.inviteCode || sharedHabitDetails?.inviteCode
+  const shareUrl = createSharedMutation.data?.shareUrl || sharedHabitDetails?.shareUrl
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
