@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Plus, Minus } from 'lucide-react'
+import { Plus, Trophy, Flame, Target, Rocket } from 'lucide-react'
 import type { Habit, Entry } from '../lib/db'
 import { format } from 'date-fns'
 import { useCreateEntry, useDeleteEntry } from '../hooks/useEntries'
 import { getHabitColor } from '../lib/colors'
+import { calculateHabitStats } from '../lib/stats'
 import LogPastDateModal from './LogPastDateModal'
 import RemoveEntryModal from './RemoveEntryModal'
 import EditHabitModal from './EditHabitModal'
@@ -41,32 +42,8 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   const isLoading = createEntryMutation.isPending || deleteEntryMutation.isPending
   const colors = getHabitColor(habit.color)
 
-  // Calculate simple streak (consecutive days)
-  const calculateStreak = () => {
-    if (entries.length === 0) return 0
-
-    // Get unique dates only (handle multiple entries per day)
-    const uniqueDates = Array.from(new Set(entries.map(e => e.date))).sort((a, b) => b.localeCompare(a))
-
-    let streak = 0
-    let currentDate = new Date()
-    currentDate.setHours(0, 0, 0, 0) // Normalize to start of day
-
-    for (const dateStr of uniqueDates) {
-      const entryDate = new Date(dateStr + 'T00:00:00')
-      const diffDays = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
-
-      if (diffDays === streak) {
-        streak++
-      } else {
-        break
-      }
-    }
-
-    return streak
-  }
-
-  const currentStreak = calculateStreak()
+  // Calculate all stats
+  const stats = calculateHabitStats(habit, entries)
 
   return (
     <>
@@ -82,11 +59,9 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
             >
               {habit.icon}
             </div>
-            <div>
+            <div className="flex items-center gap-2">
               <h3 className="text-base font-semibold text-neutral-100">{habit.name}</h3>
-              <div className="text-xs text-neutral-500 mt-0.5">
-                {currentStreak} day streak
-              </div>
+              <StatBadge habit={habit} stats={stats} />
             </div>
           </div>
 
@@ -152,4 +127,67 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
       />
     </>
   )
+}
+
+// Stat badge component to show most relevant metric
+interface StatBadgeProps {
+  habit: Habit
+  stats: ReturnType<typeof calculateHabitStats>
+}
+
+function StatBadge({ habit, stats }: StatBadgeProps) {
+  // Show most relevant badge based on priority
+
+  // 1. Currently at longest streak (most impressive)
+  if (stats.currentStreak === stats.longestStreak && stats.longestStreak >= 3) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+        <Trophy className="w-3 h-3" />
+        {stats.longestStreak}
+      </span>
+    )
+  }
+
+  // 2. Active streak (3+ days)
+  if (stats.currentStreak >= 3) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+        <Flame className="w-3 h-3" />
+        {stats.currentStreak}
+      </span>
+    )
+  }
+
+  // 3. Target met this period (target habits only)
+  if (habit.targetCount && stats.completionsThisPeriod >= habit.targetCount) {
+    const isOverachieving = stats.completionsThisPeriod > habit.targetCount
+
+    if (isOverachieving) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <Rocket className="w-3 h-3" />
+          {stats.completionsThisPeriod}/{habit.targetCount}
+        </span>
+      )
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <Target className="w-3 h-3" />
+        {stats.completionsThisPeriod}/{habit.targetCount}
+      </span>
+    )
+  }
+
+  // 4. Show small streak if any
+  if (stats.currentStreak > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-neutral-800 text-neutral-400 border border-neutral-700">
+        <Flame className="w-3 h-3" />
+        {stats.currentStreak}
+      </span>
+    )
+  }
+
+  return null
 }

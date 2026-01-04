@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { format } from 'date-fns'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
+import HabitMilestones from '../components/HabitMilestones'
 import CreateHabitModal from '../components/CreateHabitModal'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import { useHabits } from '../hooks/useHabits'
@@ -110,6 +111,8 @@ function DashboardContent() {
         )}
 
         <HabitCalendar habits={habits} entriesMap={entriesMap} />
+
+        <HabitMilestones habits={habits} entriesMap={entriesMap} />
 
         <CreateHabitModal
           isOpen={isModalOpen}

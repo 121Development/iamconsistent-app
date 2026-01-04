@@ -90,9 +90,9 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
         </div>
 
         {/* Scrollable calendar grid */}
-        <div ref={scrollContainerRef} className="overflow-x-auto flex-1">
-          <div className="space-y-4">
-            {habits.map((habit) => (
+        <div ref={scrollContainerRef} className="overflow-x-auto flex-1 overflow-y-visible">
+          <div className="space-y-4 pt-8 pb-2">
+            {habits.map((habit, habitIndex) => (
               <div key={habit.id} className="flex gap-1 h-3">
                 {allDays.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd')
@@ -113,9 +113,9 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
                         title={`${format(day, 'MMM d, yyyy')}: ${count} ${count === 1 ? 'entry' : 'entries'}`}
                       />
 
-                      {/* Tooltip */}
+                      {/* Tooltip - always show above */}
                       {isHovered && (
-                        <div className="absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none">
+                        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none shadow-lg">
                           {format(day, 'MMM d, yyyy')}: {count} {count === 1 ? 'entry' : 'entries'}
                         </div>
                       )}
