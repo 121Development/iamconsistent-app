@@ -39,10 +39,27 @@ function JoinPage() {
       if (!isLoaded) return
 
       if (!userId) {
-        // Redirect to sign in with return URL
+        // Store invite code in localStorage before redirecting to sign-in
+        // so we can restore it after authentication
+        if (code && code.length === 8) {
+          localStorage.setItem('pendingInviteCode', code)
+        }
+        // Redirect to sign in
         navigate({ to: '/sign-in' })
         return
       }
+
+      // User is authenticated - check for pending invite code
+      const pendingCode = localStorage.getItem('pendingInviteCode')
+      if (pendingCode && pendingCode !== code) {
+        // Redirect to the join page with the pending code
+        localStorage.removeItem('pendingInviteCode')
+        navigate({ to: `/join/${pendingCode}` })
+        return
+      }
+
+      // Clear any pending invite code
+      localStorage.removeItem('pendingInviteCode')
 
       // User is authenticated - sync user to database first
       try {

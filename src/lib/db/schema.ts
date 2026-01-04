@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(), // Clerk user ID
   email: text('email').notNull().unique(),
+  name: text('name'), // Optional display name
   subscriptionTier: text('subscription_tier', { enum: ['free', 'pro'] })
     .notNull()
     .default('free'),

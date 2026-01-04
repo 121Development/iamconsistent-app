@@ -149,7 +149,7 @@ export default function SharedHabitStats({
                       {/* User info */}
                       <div>
                         <div className="text-sm font-medium text-neutral-100">
-                          {member.email}
+                          {member.name || member.email}
                         </div>
                         <div className="text-xs text-neutral-500">
                           {member.totalEntries} total entries

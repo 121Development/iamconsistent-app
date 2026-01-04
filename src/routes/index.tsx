@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, CheckCircle2, Users } from 'lucide-react'
 import { useState } from 'react'
 import JoinHabitModal from '../components/JoinHabitModal'
+import Footer from '../components/Footer'
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
@@ -11,7 +12,8 @@ function LandingPage() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-6">
+    <div className="min-h-screen bg-neutral-950 flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="max-w-4xl mx-auto text-center">
         <div className="mb-8">
           <CheckCircle2 className="h-20 w-20 text-emerald-400 mx-auto mb-6" />
@@ -69,6 +71,9 @@ function LandingPage() {
           </div>
         </div>
       </div>
+      </div>
+
+      <Footer />
     </div>
   )
 }

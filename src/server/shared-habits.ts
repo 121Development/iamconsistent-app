@@ -254,6 +254,7 @@ export const getSharedHabitMembers = createServerFn({ method: 'GET' })
       .select({
         userId: users.id,
         email: users.email,
+        name: users.name,
         role: sharedHabitMembers.role,
         joinedAt: sharedHabitMembers.joinedAt,
       })
@@ -293,6 +294,7 @@ export const getSharedHabitLeaderboard = createServerFn({ method: 'GET' })
         userId: habits.userId,
         habitId: habits.id,
         email: users.email,
+        name: users.name,
       })
       .from(habits)
       .innerJoin(users, eq(habits.userId, users.id))
@@ -345,6 +347,7 @@ export const getSharedHabitLeaderboard = createServerFn({ method: 'GET' })
         return {
           userId: member.userId,
           email: member.email,
+          name: member.name,
           totalEntries,
           uniqueDays,
           currentStreak,
@@ -503,4 +506,75 @@ export const removeMember = createServerFn({ method: 'POST' })
       )
 
     return { success: true }
+  })
+
+// Get member activity for calendar view (last 30 days)
+export const getSharedHabitMemberActivity = createServerFn({ method: 'GET' })
+  .inputValidator(sharedHabitIdSchema)
+  .handler(async ({ data }) => {
+    const userId = await requireAuth()
+    const db = createDb(env.DB)
+
+    // Verify user is a member
+    const [membership] = await db
+      .select()
+      .from(sharedHabitMembers)
+      .where(
+        and(
+          eq(sharedHabitMembers.sharedHabitId, data.sharedHabitId),
+          eq(sharedHabitMembers.userId, userId)
+        )
+      )
+      .limit(1)
+
+    if (!membership) {
+      throw new Error('You are not a member of this shared habit')
+    }
+
+    // Get all member habits for this shared habit
+    const memberHabits = await db
+      .select({
+        userId: habits.userId,
+        habitId: habits.id,
+        email: users.email,
+        name: users.name,
+      })
+      .from(habits)
+      .innerJoin(users, eq(habits.userId, users.id))
+      .where(eq(habits.sharedHabitId, data.sharedHabitId))
+
+    // Get entries for all these habits (last 30 days)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
+
+    const activityData = await Promise.all(
+      memberHabits.map(async (member) => {
+        // Get all entries for this member's habit
+        const memberEntries = await db
+          .select()
+          .from(entries)
+          .where(
+            and(
+              eq(entries.habitId, member.habitId),
+              sql`entries.date >= ${thirtyDaysAgoStr}`
+            )
+          )
+
+        // Group entries by date and count them
+        const entriesByDate: Record<string, number> = {}
+        memberEntries.forEach((entry) => {
+          entriesByDate[entry.date] = (entriesByDate[entry.date] || 0) + 1
+        })
+
+        return {
+          userId: member.userId,
+          email: member.email,
+          name: member.name,
+          entriesByDate,
+        }
+      })
+    )
+
+    return activityData
   })

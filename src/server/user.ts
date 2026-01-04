@@ -5,7 +5,7 @@ import { users, habits, entries } from '../lib/db'
 import { env } from 'cloudflare:workers'
 import { requireAuth } from './auth'
 import { clerkClient } from '@clerk/tanstack-react-start/server'
-import { updateEmailNotificationsSchema } from './schemas'
+import { updateEmailNotificationsSchema, updateUserNameSchema } from './schemas'
 
 // Get current user settings
 export const getUserSettings = createServerFn({ method: 'GET' }).handler(async () => {
@@ -23,9 +23,28 @@ export const getUserSettings = createServerFn({ method: 'GET' }).handler(async (
   }
 
   return {
+    name: user.name,
     emailNotifications: user.emailNotifications,
   }
 })
+
+// Update user name
+export const updateUserName = createServerFn({ method: 'POST' })
+  .inputValidator(updateUserNameSchema)
+  .handler(async ({ data }) => {
+    const userId = await requireAuth()
+    const db = createDb(env.DB)
+
+    await db
+      .update(users)
+      .set({
+        name: data.name || null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId))
+
+    return { success: true, name: data.name }
+  })
 
 // Update email notification preference
 export const updateEmailNotifications = createServerFn({ method: 'POST' })

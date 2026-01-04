@@ -5,6 +5,10 @@ export const updateEmailNotificationsSchema = z.object({
   enabled: z.boolean(),
 })
 
+export const updateUserNameSchema = z.object({
+  name: z.string().max(100).optional(),
+})
+
 // Habit schemas
 export const createHabitSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),

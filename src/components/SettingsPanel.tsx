@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserButton, useAuth } from '@clerk/tanstack-react-start'
-import { LogOut, Trash2, Mail } from 'lucide-react'
-import { getUserSettings, updateEmailNotifications, deleteUserAccount } from '../server/user'
+import { LogOut, Trash2, Mail, User } from 'lucide-react'
+import { getUserSettings, updateEmailNotifications, updateUserName, deleteUserAccount } from '../server/user'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 
 export default function SettingsPanel() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [isEditingName, setIsEditingName] = useState(false)
   const navigate = useNavigate()
   const { signOut } = useAuth()
   const queryClient = useQueryClient()
@@ -16,6 +18,20 @@ export default function SettingsPanel() {
   const { data: settings } = useQuery({
     queryKey: ['user-settings'],
     queryFn: () => getUserSettings(),
+  })
+
+  // Update name
+  const updateNameMutation = useMutation({
+    mutationFn: (name: string) => updateUserName({ data: { name } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-settings'] })
+      queryClient.invalidateQueries({ queryKey: ['habits'] })
+      toast.success('Name updated successfully')
+      setIsEditingName(false)
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update name')
+    },
   })
 
   // Update email notifications
@@ -49,6 +65,20 @@ export default function SettingsPanel() {
     },
   })
 
+  const handleSaveName = () => {
+    updateNameMutation.mutate(nameInput.trim())
+  }
+
+  const handleEditName = () => {
+    setNameInput(settings?.name || '')
+    setIsEditingName(true)
+  }
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false)
+    setNameInput('')
+  }
+
   const handleEmailToggle = () => {
     if (settings) {
       updateEmailMutation.mutate(!settings.emailNotifications)
@@ -71,6 +101,61 @@ export default function SettingsPanel() {
         <h2 className="text-lg font-bold text-neutral-100 mb-6">Settings</h2>
 
         <div className="space-y-6">
+          {/* Display Name */}
+          <div className="pb-6 border-b border-neutral-800">
+            <div className="flex items-center gap-3 mb-3">
+              <User className="w-5 h-5 text-neutral-400" />
+              <div className="flex-1">
+                <div className="text-sm font-medium text-neutral-100">
+                  Display Name
+                </div>
+                <div className="text-xs text-neutral-500 mt-0.5">
+                  How you appear to others in shared habits
+                </div>
+              </div>
+            </div>
+
+            {isEditingName ? (
+              <div className="flex gap-2 mt-3">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Enter your name"
+                  maxLength={100}
+                  className="flex-1 bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={updateNameMutation.isPending}
+                  className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={handleCancelEditName}
+                  disabled={updateNameMutation.isPending}
+                  className="px-3 py-2 bg-neutral-800 hover:bg-neutral-750 text-neutral-300 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between mt-3">
+                <div className="text-sm text-neutral-300">
+                  {settings?.name || <span className="text-neutral-500 italic">Not set</span>}
+                </div>
+                <button
+                  onClick={handleEditName}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Email Notifications Toggle */}
           <div className="flex items-center justify-between pb-6 border-b border-neutral-800">
             <div className="flex items-center gap-3">

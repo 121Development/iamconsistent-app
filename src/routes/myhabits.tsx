@@ -1,12 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { format } from 'date-fns'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
+import SharedHabitsCalendar from '../components/SharedHabitsCalendar'
 import HabitMilestones from '../components/HabitMilestones'
 import SettingsPanel from '../components/SettingsPanel'
 import CreateHabitModal from '../components/CreateHabitModal'
+import Footer from '../components/Footer'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import { useHabits } from '../hooks/useHabits'
 import { useMultipleHabitEntries } from '../hooks/useEntries'
@@ -27,6 +29,16 @@ function Dashboard() {
 function DashboardContent() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSyncing, setIsSyncing] = useState(true)
+  const navigate = useNavigate()
+
+  // Check for pending invite code and redirect if found
+  useEffect(() => {
+    const pendingInviteCode = localStorage.getItem('pendingInviteCode')
+    if (pendingInviteCode) {
+      // Redirect to join page with the pending code
+      navigate({ to: `/join/${pendingInviteCode}` })
+    }
+  }, [navigate])
 
   // Sync user to database on mount
   useEffect(() => {
@@ -67,7 +79,8 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="min-h-screen bg-neutral-950 flex flex-col">
+      <div className="flex-1">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -114,6 +127,8 @@ function DashboardContent() {
 
         <HabitCalendar habits={habits} entriesMap={entriesMap} />
 
+        <SharedHabitsCalendar habits={habits} />
+
         <HabitMilestones habits={habits} entriesMap={entriesMap} />
 
         <SettingsPanel />
@@ -123,6 +138,9 @@ function DashboardContent() {
           onClose={() => setIsModalOpen(false)}
         />
       </div>
+      </div>
+
+      <Footer />
     </div>
   )
 }

@@ -215,14 +215,14 @@ export default function ShareHabitModal({ isOpen, onClose, habit }: ShareHabitMo
                     className="flex items-center justify-between bg-neutral-800 border border-neutral-700 rounded p-3"
                   >
                     <div>
-                      <div className="text-sm text-neutral-100">{member.email}</div>
+                      <div className="text-sm text-neutral-100">{member.name || member.email}</div>
                       <div className="text-xs text-neutral-500">
                         {member.role === 'owner' ? 'Owner' : 'Member'}
                       </div>
                     </div>
                     {member.role === 'member' && (
                       <button
-                        onClick={() => handleRemoveMember(member.userId, member.email)}
+                        onClick={() => handleRemoveMember(member.userId, member.name || member.email)}
                         disabled={removeMemberMutation.isPending}
                         className="text-red-400 hover:text-red-300 transition-colors"
                       >
