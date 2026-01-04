@@ -3,32 +3,48 @@ import { eq } from 'drizzle-orm'
 import { createDb } from '../lib/db/client'
 import { users } from '../lib/db'
 import { env } from 'cloudflare:workers'
+import { requireAuth } from './auth'
+import { clerkClient } from '@clerk/tanstack-react-start/server'
 
-// Initialize demo user in database
-export const initDemoUser = createServerFn({ method: 'GET' }).handler(async () => {
+// Sync current Clerk user to database
+export const syncUser = createServerFn({ method: 'GET' }).handler(async () => {
   try {
+    const userId = await requireAuth()
     const db = createDb(env.DB)
 
-    // Check if demo user exists
+    // Check if user exists in database
     const [existingUser] = await db
       .select()
       .from(users)
-      .where(eq(users.id, 'demo-user'))
+      .where(eq(users.id, userId))
       .limit(1)
 
     if (!existingUser) {
-      // Create demo user
+      // Get full user details from Clerk
+      const client = clerkClient()
+      const clerkUser = await client.users.getUser(userId)
+
+      if (!clerkUser) {
+        throw new Error('Could not get user details from Clerk')
+      }
+
+      // Extract email from Clerk user - use primaryEmailAddress or fall back to first email
+      const email = clerkUser.primaryEmailAddress?.emailAddress ||
+                    clerkUser.emailAddresses[0]?.emailAddress ||
+                    `${userId}@clerk.user`
+
+      // Create user in database
       await db.insert(users).values({
-        id: 'demo-user',
-        email: 'demo@example.com',
+        id: userId,
+        email: email,
         subscriptionTier: 'free',
       })
-      console.log('Demo user created')
+      console.log('User synced to database:', userId, email)
     }
 
-    return { success: true }
+    return { success: true, userId }
   } catch (error: any) {
-    console.error('Failed to init demo user:', error)
+    console.error('Failed to sync user:', error)
     throw error
   }
 })

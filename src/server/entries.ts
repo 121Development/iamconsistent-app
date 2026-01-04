@@ -9,13 +9,13 @@ import {
   getEntriesSchema,
 } from './schemas'
 import { env } from 'cloudflare:workers'
+import { requireAuth } from './auth'
 
 // Get all entries for a habit
 export const getEntries = createServerFn({ method: 'GET' })
   .inputValidator(getEntriesSchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)
 
@@ -54,8 +54,7 @@ export const getEntries = createServerFn({ method: 'GET' })
 export const createEntry = createServerFn({ method: 'POST' })
   .inputValidator(createEntrySchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)
 
@@ -89,8 +88,7 @@ export const createEntry = createServerFn({ method: 'POST' })
 export const deleteEntry = createServerFn({ method: 'POST' })
   .inputValidator(deleteEntrySchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)
 

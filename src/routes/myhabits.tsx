@@ -5,20 +5,39 @@ import { format } from 'date-fns'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
 import CreateHabitModal from '../components/CreateHabitModal'
+import { ProtectedRoute } from '../components/ProtectedRoute'
 import { useHabits } from '../hooks/useHabits'
 import { useMultipleHabitEntries } from '../hooks/useEntries'
-import { initDemoUser } from '../server/init'
+import { syncUser } from '../server/init'
 
 export const Route = createFileRoute('/myhabits')({
   component: Dashboard,
 })
 
 function Dashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
+  )
+}
 
-  // Initialize demo user on mount
+function DashboardContent() {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(true)
+
+  // Sync user to database on mount
   useEffect(() => {
-    initDemoUser()
+    const sync = async () => {
+      try {
+        await syncUser()
+      } catch (error) {
+        console.error('Failed to sync user:', error)
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+    sync()
   }, [])
 
   // Fetch habits using useQuery
@@ -33,12 +52,14 @@ function Dashboard() {
     return acc
   }, {} as Record<string, any[]>)
 
-  const isLoading = habitsLoading || entriesQueries.some((q) => q.isLoading)
+  const isLoading = isSyncing || habitsLoading || entriesQueries.some((q) => q.isLoading)
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-neutral-500 text-sm">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-neutral-950">
+        <div className="text-neutral-500 text-sm">
+          {isSyncing ? 'Setting up your account...' : 'Loading...'}
+        </div>
       </div>
     )
   }

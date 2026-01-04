@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { eq, and } from 'drizzle-orm'
-import { createDb } from '../lib/db/client' 
+import { createDb } from '../lib/db/client'
 import { habits, users } from '../lib/db'
 import {
   createHabitSchema,
@@ -11,11 +11,11 @@ import {
 } from './schemas'
 import { canCreateHabit } from '../lib/subscription'
 import { env } from 'cloudflare:workers'
+import { requireAuth } from './auth'
 
 // Get all habits for the current user
 export const getHabits = createServerFn({ method: 'GET' }).handler(async () => {
-  // Auth disabled - use demo user ID
-  const userId = 'demo-user'
+  const userId = await requireAuth()
 
   const db = createDb(env.DB)
 
@@ -32,8 +32,7 @@ export const getHabits = createServerFn({ method: 'GET' }).handler(async () => {
 export const getHabit = createServerFn({ method: 'GET' })
   .inputValidator(getHabitSchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)  
 
@@ -54,8 +53,7 @@ export const getHabit = createServerFn({ method: 'GET' })
 export const createHabit = createServerFn({ method: 'POST' })
   .inputValidator(createHabitSchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)
 
@@ -85,8 +83,7 @@ export const createHabit = createServerFn({ method: 'POST' })
 export const updateHabit = createServerFn({ method: 'POST' })
   .inputValidator(updateHabitSchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)
 
@@ -126,8 +123,7 @@ export const updateHabit = createServerFn({ method: 'POST' })
 export const deleteHabit = createServerFn({ method: 'POST' })
   .inputValidator(deleteHabitSchema)
   .handler(async ({ data }) => {
-    // Auth disabled - use demo user ID
-    const userId = 'demo-user'
+    const userId = await requireAuth()
 
     const db = createDb(env.DB)
 
