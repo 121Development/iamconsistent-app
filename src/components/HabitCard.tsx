@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trophy, Flame, Target, Rocket } from 'lucide-react'
+import { Plus, Trophy, Flame, Target, Rocket, Share2, Users } from 'lucide-react'
 import type { Habit, Entry } from '../lib/db'
 import { format } from 'date-fns'
 import { useCreateEntry, useDeleteEntry } from '../hooks/useEntries'
@@ -8,6 +8,8 @@ import { calculateHabitStats } from '../lib/stats'
 import LogPastDateModal from './LogPastDateModal'
 import RemoveEntryModal from './RemoveEntryModal'
 import EditHabitModal from './EditHabitModal'
+import ShareHabitModal from './ShareHabitModal'
+import SharedHabitStats from './SharedHabitStats'
 
 interface HabitCardProps {
   habit: Habit
@@ -18,6 +20,8 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   const [isPastDateModalOpen, setIsPastDateModalOpen] = useState(false)
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
 
   const createEntryMutation = useCreateEntry()
   const deleteEntryMutation = useDeleteEntry()
@@ -61,6 +65,15 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
             </div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-semibold text-neutral-100">{habit.name}</h3>
+              {habit.isShared && (
+                <button
+                  onClick={() => setIsStatsModalOpen(true)}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
+                  title="View group stats"
+                >
+                  <Users className="w-3 h-3" />
+                </button>
+              )}
               <StatBadge habit={habit} stats={stats} />
             </div>
           </div>
@@ -102,7 +115,13 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
           >
             log earlier date
           </button>
-          
+          |
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors"
+          >
+            {habit.isShared ? 'manage sharing' : 'share'}
+          </button>
         </div>
       </div>
 
@@ -125,6 +144,21 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
         habitName={habit.name}
         entries={entries}
       />
+
+      <ShareHabitModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        habit={habit}
+      />
+
+      {habit.isShared && habit.sharedHabitId && (
+        <SharedHabitStats
+          isOpen={isStatsModalOpen}
+          onClose={() => setIsStatsModalOpen(false)}
+          habit={habit}
+          sharedHabitId={habit.sharedHabitId}
+        />
+      )}
     </>
   )
 }

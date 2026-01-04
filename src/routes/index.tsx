@@ -1,11 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Users } from 'lucide-react'
+import { useState } from 'react'
+import JoinHabitModal from '../components/JoinHabitModal'
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
 })
 
 function LandingPage() {
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-6">
       <div className="max-w-4xl mx-auto text-center">
@@ -19,13 +23,25 @@ function LandingPage() {
           </p>
         </div>
 
-        <Link
-          to="/myhabits"
-          className="inline-flex items-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-semibold text-lg py-4 px-8 rounded transition-colors"
-        >
-          Track my first habit
-          <ArrowRight className="h-5 w-5" />
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            to="/myhabits"
+            className="inline-flex items-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-semibold text-lg py-4 px-8 rounded transition-colors"
+          >
+            Track my first habit
+            <ArrowRight className="h-5 w-5" />
+          </Link>
+
+          <button
+            onClick={() => setIsJoinModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-neutral-800 hover:bg-neutral-750 text-neutral-300 hover:text-neutral-100 font-medium text-sm py-3 px-6 rounded transition-colors border border-neutral-700"
+          >
+            <Users className="h-4 w-4" />
+            Join shared habit
+          </button>
+        </div>
+
+        <JoinHabitModal isOpen={isJoinModalOpen} onClose={() => setIsJoinModalOpen(false)} />
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
           <div className="border border-neutral-800 bg-neutral-900/50 p-6 rounded">
