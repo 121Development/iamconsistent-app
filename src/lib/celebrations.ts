@@ -107,10 +107,11 @@ export function checkCelebrations(
       newStats.completionsThisPeriod > habit.targetCount &&
       previousStats.completionsThisPeriod <= habit.targetCount
     ) {
+      const periodLabel = habit.targetPeriod === 'day' ? 'today' : `this ${habit.targetPeriod}`
       celebrations.push({
         type: 'overachiever',
         title: 'Overachiever!',
-        description: `${newStats.completionsThisPeriod}/${habit.targetCount} this ${habit.targetPeriod}`,
+        description: `${newStats.completionsThisPeriod}/${habit.targetCount} ${periodLabel}`,
         icon: 'rocket',
         emoji: '🚀',
       })

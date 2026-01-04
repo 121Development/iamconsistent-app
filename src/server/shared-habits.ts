@@ -76,10 +76,15 @@ export const createSharedHabit = createServerFn({ method: 'POST' })
       throw new Error('Failed to generate unique invite code')
     }
 
-    // Create shared habit record
-    const [sharedHabit] = await db
-      .insert(sharedHabits)
-      .values({
+    // Create shared habit ID upfront
+    const sharedHabitId = nanoid()
+
+    console.log('Creating shared habit with ID:', sharedHabitId, 'Code:', inviteCode)
+
+    // Use batch for ALL operations to ensure atomicity
+    await db.batch([
+      db.insert(sharedHabits).values({
+        id: sharedHabitId,
         habitName: habit.name,
         habitIcon: habit.icon,
         habitColor: habit.color,
@@ -87,30 +92,37 @@ export const createSharedHabit = createServerFn({ method: 'POST' })
         targetPeriod: habit.targetPeriod,
         ownerUserId: userId,
         inviteCode,
-      })
-      .returning()
+      }),
+      db.insert(sharedHabitMembers).values({
+        sharedHabitId: sharedHabitId,
+        userId,
+        role: 'owner',
+      }),
+      db
+        .update(habits)
+        .set({
+          isShared: true,
+          sharedHabitId: sharedHabitId,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(habits.id, data.habitId)),
+    ])
 
-    // Add owner as first member
-    await db.insert(sharedHabitMembers).values({
-      sharedHabitId: sharedHabit.id,
-      userId,
-      role: 'owner',
-    })
+    console.log('Batch completed - all 3 operations')
 
-    // Update habit to mark as shared
-    await db
-      .update(habits)
-      .set({
-        isShared: true,
-        sharedHabitId: sharedHabit.id,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(habits.id, data.habitId))
+    // Verify the record exists after batch
+    const [verification] = await db
+      .select()
+      .from(sharedHabits)
+      .where(eq(sharedHabits.id, sharedHabitId))
+      .limit(1)
+
+    console.log('Verification:', verification ? 'EXISTS' : 'MISSING', 'Code:', verification?.inviteCode)
 
     return {
       inviteCode,
       shareUrl: `https://iamconsistent.io/join/${inviteCode}`,
-      sharedHabitId: sharedHabit.id,
+      sharedHabitId: sharedHabitId,
     }
   })
 
@@ -121,6 +133,8 @@ export const joinSharedHabit = createServerFn({ method: 'POST' })
     const userId = await requireAuth()
     const db = createDb(env.DB)
 
+    console.log('Join attempt - Code:', data.inviteCode, 'Uppercase:', data.inviteCode.toUpperCase())
+
     // Find shared habit by invite code
     const [sharedHabit] = await db
       .select()
@@ -128,7 +142,16 @@ export const joinSharedHabit = createServerFn({ method: 'POST' })
       .where(eq(sharedHabits.inviteCode, data.inviteCode.toUpperCase()))
       .limit(1)
 
+    console.log('Found shared habit:', sharedHabit ? `YES (ID: ${sharedHabit.id})` : 'NO')
+
     if (!sharedHabit) {
+      // Debug: List all codes in database
+      const allCodes = await db.select({
+        id: sharedHabits.id,
+        inviteCode: sharedHabits.inviteCode,
+        createdAt: sharedHabits.createdAt
+      }).from(sharedHabits).limit(20)
+      console.log('Available codes:', JSON.stringify(allCodes))
       throw new Error('Invalid invite code')
     }
 
@@ -577,4 +600,57 @@ export const getSharedHabitMemberActivity = createServerFn({ method: 'GET' })
     )
 
     return activityData
+  })
+
+// Delete/unshare a shared habit (owner only)
+export const deleteSharedHabit = createServerFn({ method: 'POST' })
+  .inputValidator(sharedHabitIdSchema)
+  .handler(async ({ data }) => {
+    const userId = await requireAuth()
+    const db = createDb(env.DB)
+
+    // Verify user is owner
+    const [ownerMembership] = await db
+      .select()
+      .from(sharedHabitMembers)
+      .where(
+        and(
+          eq(sharedHabitMembers.sharedHabitId, data.sharedHabitId),
+          eq(sharedHabitMembers.userId, userId),
+          eq(sharedHabitMembers.role, 'owner')
+        )
+      )
+      .limit(1)
+
+    if (!ownerMembership) {
+      throw new Error('Only the owner can delete the shared habit')
+    }
+
+    // Get all habits linked to this shared habit
+    const linkedHabits = await db
+      .select()
+      .from(habits)
+      .where(eq(habits.sharedHabitId, data.sharedHabitId))
+
+    // Unshare all linked habits (convert back to individual habits)
+    await db
+      .update(habits)
+      .set({
+        isShared: false,
+        sharedHabitId: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(habits.sharedHabitId, data.sharedHabitId))
+
+    // Delete all members
+    await db
+      .delete(sharedHabitMembers)
+      .where(eq(sharedHabitMembers.sharedHabitId, data.sharedHabitId))
+
+    // Delete the shared habit record
+    await db
+      .delete(sharedHabits)
+      .where(eq(sharedHabits.id, data.sharedHabitId))
+
+    return { success: true }
   })

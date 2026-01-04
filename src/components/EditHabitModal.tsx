@@ -21,6 +21,7 @@ const COLOR_OPTIONS = [
 
 export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModalProps) {
   const [name, setName] = useState(habit.name)
+  const [description, setDescription] = useState(habit.description || '')
   const [icon, setIcon] = useState(habit.icon)
   const [color, setColor] = useState(habit.color)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -31,6 +32,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
   // Update form when habit changes
   useEffect(() => {
     setName(habit.name)
+    setDescription(habit.description || '')
     setIcon(habit.icon)
     setColor(habit.color)
   }, [habit])
@@ -45,6 +47,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
       {
         id: habit.id,
         name: name.trim(),
+        description: description.trim() || undefined,
         icon,
         color,
       },
@@ -92,6 +95,20 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
               placeholder="e.g., Morning Exercise"
               className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">
+              Short Description <span className="text-neutral-500 text-xs">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., 30 minutes of cardio"
+              maxLength={100}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
           </div>
 

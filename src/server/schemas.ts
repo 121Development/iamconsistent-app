@@ -12,19 +12,21 @@ export const updateUserNameSchema = z.object({
 // Habit schemas
 export const createHabitSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
+  description: z.string().max(100).optional(),
   icon: z.string().min(1).default('circle'),
   color: z.string().min(1).default('gray'),
   targetCount: z.number().int().positive().optional(),
-  targetPeriod: z.enum(['week', 'month']).optional(),
+  targetPeriod: z.enum(['day', 'week', 'month']).optional(),
 })
 
 export const updateHabitSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(100).optional(),
+  description: z.string().max(100).optional().nullable(),
   icon: z.string().min(1).optional(),
   color: z.string().min(1).optional(),
   targetCount: z.number().int().positive().optional().nullable(),
-  targetPeriod: z.enum(['week', 'month']).optional().nullable(),
+  targetPeriod: z.enum(['day', 'week', 'month']).optional().nullable(),
   isArchived: z.boolean().optional(),
 })
 

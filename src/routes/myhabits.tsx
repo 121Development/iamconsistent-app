@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, UserPlus } from 'lucide-react'
 import { format } from 'date-fns'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
@@ -8,7 +8,10 @@ import SharedHabitsCalendar from '../components/SharedHabitsCalendar'
 import HabitMilestones from '../components/HabitMilestones'
 import SettingsPanel from '../components/SettingsPanel'
 import CreateHabitModal from '../components/CreateHabitModal'
+import InviteFriendModal from '../components/InviteFriendModal'
+import ShareHabitModal from '../components/ShareHabitModal'
 import Footer from '../components/Footer'
+import type { Habit } from '../lib/db'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import { useHabits } from '../hooks/useHabits'
 import { useMultipleHabitEntries } from '../hooks/useEntries'
@@ -28,6 +31,8 @@ function Dashboard() {
 
 function DashboardContent() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false)
+  const [selectedHabitToShare, setSelectedHabitToShare] = useState<Habit | null>(null)
   const [isSyncing, setIsSyncing] = useState(true)
   const navigate = useNavigate()
 
@@ -125,6 +130,18 @@ function DashboardContent() {
           </div>
         )}
 
+        {habits.length > 0 && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setIsInviteFriendModalOpen(true)}
+              className="w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-emerald-500/50 text-neutral-300 font-medium py-3 px-4 rounded transition-colors flex items-center justify-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span className="text-sm">Track with a Friend</span>
+            </button>
+          </div>
+        )}
+
         <HabitCalendar habits={habits} entriesMap={entriesMap} />
 
         <SharedHabitsCalendar habits={habits} />
@@ -137,6 +154,24 @@ function DashboardContent() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />
+
+        <InviteFriendModal
+          isOpen={isInviteFriendModalOpen}
+          onClose={() => setIsInviteFriendModalOpen(false)}
+          habits={habits}
+          onSelectHabit={(habit) => {
+            setSelectedHabitToShare(habit)
+            setIsInviteFriendModalOpen(false)
+          }}
+        />
+
+        {selectedHabitToShare && (
+          <ShareHabitModal
+            isOpen={true}
+            onClose={() => setSelectedHabitToShare(null)}
+            habit={selectedHabitToShare}
+          />
+        )}
       </div>
       </div>
 

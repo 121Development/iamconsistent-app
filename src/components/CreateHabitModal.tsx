@@ -19,11 +19,12 @@ const COLOR_OPTIONS = [
 
 export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalProps) {
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [icon, setIcon] = useState('💪')
   const [color, setColor] = useState('emerald')
   const [useTarget, setUseTarget] = useState(false)
   const [targetCount, setTargetCount] = useState(3)
-  const [targetPeriod, setTargetPeriod] = useState<'week' | 'month'>('week')
+  const [targetPeriod, setTargetPeriod] = useState<'day' | 'week' | 'month'>('week')
 
   const createHabitMutation = useCreateHabit()
 
@@ -36,6 +37,7 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
     createHabitMutation.mutate(
       {
         name: name.trim(),
+        description: description.trim() || undefined,
         icon,
         color,
         ...(useTarget && { targetCount, targetPeriod }),
@@ -44,6 +46,7 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
         onSuccess: () => {
           // Reset form
           setName('')
+          setDescription('')
           setIcon('💪')
           setColor('emerald')
           setUseTarget(false)
@@ -85,6 +88,75 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
 
           <div>
             <label className="block text-sm font-medium text-neutral-300 mb-2">
+              Short Description <span className="text-neutral-500 text-xs">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., 30 minutes of cardio"
+              maxLength={100}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium text-neutral-300">
+                Set target goal <br />
+                (X times per day/week/month)
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={useTarget}
+                onClick={() => setUseTarget(!useTarget)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-neutral-900 ${
+                  useTarget ? 'bg-emerald-500' : 'bg-neutral-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useTarget ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </label>
+          </div>
+
+          {useTarget && (
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Count
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={targetCount}
+                  onChange={(e) => setTargetCount(parseInt(e.target.value) || 1)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Period
+                </label>
+                <select
+                  value={targetPeriod}
+                  onChange={(e) => setTargetPeriod(e.target.value as 'day' | 'week' | 'month')}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                >
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">
               Icon
             </label>
             <div className="grid grid-cols-5 gap-2">
@@ -122,48 +194,6 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
               ))}
             </div>
           </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-neutral-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useTarget}
-                onChange={(e) => setUseTarget(e.target.checked)}
-                className="w-4 h-4 rounded bg-neutral-950 border-neutral-800 text-emerald-500 focus:ring-emerald-500"
-              />
-              Set target goal
-            </label>
-          </div>
-
-          {useTarget && (
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Count
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={targetCount}
-                  onChange={(e) => setTargetCount(parseInt(e.target.value) || 1)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Period
-                </label>
-                <select
-                  value={targetPeriod}
-                  onChange={(e) => setTargetPeriod(e.target.value as 'week' | 'month')}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                >
-                  <option value="week">Week</option>
-                  <option value="month">Month</option>
-                </select>
-              </div>
-            </div>
-          )}
 
           <div className="flex gap-3 pt-4">
             <button

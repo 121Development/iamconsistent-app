@@ -30,12 +30,13 @@ export const habits = sqliteTable('habits', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
+  description: text('description'), // Optional short description
   icon: text('icon').notNull().default('circle'),
   color: text('color').notNull().default('gray'),
 
   // Target tracking (optional)
   targetCount: integer('target_count'), // e.g., 3 times
-  targetPeriod: text('target_period', { enum: ['week', 'month'] }), // per week/month
+  targetPeriod: text('target_period', { enum: ['day', 'week', 'month'] }), // per day/week/month
 
   // Shared habit tracking
   isShared: integer('is_shared', { mode: 'boolean' }).notNull().default(false),
@@ -84,7 +85,7 @@ export const sharedHabits = sqliteTable('shared_habits', {
   habitIcon: text('habit_icon').notNull(),
   habitColor: text('habit_color').notNull(),
   targetCount: integer('target_count'),
-  targetPeriod: text('target_period', { enum: ['week', 'month'] }),
+  targetPeriod: text('target_period', { enum: ['day', 'week', 'month'] }),
 
   ownerUserId: text('owner_user_id')
     .notNull()

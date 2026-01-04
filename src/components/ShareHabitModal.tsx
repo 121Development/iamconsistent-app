@@ -114,8 +114,8 @@ export default function ShareHabitModal({ isOpen, onClose, habit }: ShareHabitMo
   const shareUrl = createSharedMutation.data?.shareUrl || sharedHabitDetails?.shareUrl
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+      <div className="bg-neutral-900 border-2 border-emerald-500/30 rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-neutral-100">Share Habit</h2>
           <button
@@ -126,7 +126,7 @@ export default function ShareHabitModal({ isOpen, onClose, habit }: ShareHabitMo
           </button>
         </div>
 
-        {!habit.isShared ? (
+        {!habit.isShared && !createSharedMutation.data ? (
           // Not shared yet - show share button
           <div className="space-y-4">
             <p className="text-sm text-neutral-400">

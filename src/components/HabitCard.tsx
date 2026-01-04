@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trophy, Flame, Target, Rocket, Share2, Users } from 'lucide-react'
+import { Plus, Trophy, Flame, Target, Rocket, Users } from 'lucide-react'
 import type { Habit, Entry } from '../lib/db'
 import { format } from 'date-fns'
 import { useCreateEntry, useDeleteEntry } from '../hooks/useEntries'
@@ -8,7 +8,6 @@ import { calculateHabitStats } from '../lib/stats'
 import LogPastDateModal from './LogPastDateModal'
 import RemoveEntryModal from './RemoveEntryModal'
 import EditHabitModal from './EditHabitModal'
-import ShareHabitModal from './ShareHabitModal'
 import SharedHabitStats from './SharedHabitStats'
 
 interface HabitCardProps {
@@ -20,7 +19,6 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   const [isPastDateModalOpen, setIsPastDateModalOpen] = useState(false)
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
 
   const createEntryMutation = useCreateEntry()
@@ -52,34 +50,53 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   return (
     <>
       <div className="border border-neutral-800 bg-neutral-900/50 p-5 rounded hover:border-neutral-700 transition-colors">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start gap-3 flex-1">
             <div
-              className="w-10 h-10 rounded flex items-center justify-center text-2xl border"
+              className="w-10 h-10 rounded flex items-center justify-center text-2xl border flex-shrink-0 group relative"
               style={{
                 backgroundColor: colors.bg,
                 borderColor: colors.border,
               }}
+              title={habit.description || habit.name}
             >
               {habit.icon}
-            </div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-neutral-100">{habit.name}</h3>
-              {habit.isShared && (
-                <button
-                  onClick={() => setIsStatsModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
-                  title="View group stats"
-                >
-                  <Users className="w-3 h-3" />
-                </button>
+              {habit.description && (
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 max-w-xs">
+                  {habit.description}
+                </div>
               )}
-              <StatBadge habit={habit} stats={stats} />
+            </div>
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3
+                  className="text-base font-semibold text-neutral-100 truncate group relative"
+                  title={habit.description || habit.name}
+                >
+                  {habit.name}
+                  {habit.description && (
+                    <span className="absolute left-0 top-full mt-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 font-normal whitespace-normal pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 max-w-xs">
+                      {habit.description}
+                    </span>
+                  )}
+                </h3>
+                {habit.isShared && (
+                  <button
+                    onClick={() => setIsStatsModalOpen(true)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors flex-shrink-0"
+                    title="View group stats"
+                  >
+                    <Users className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <div>
+                <StatBadge habit={habit} stats={stats} />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-
+          <div className="flex items-center gap-3 flex-shrink-0">
             <div className="w-12 text-center">
               <div className="text-2xl font-bold text-emerald-400">{todayCount}</div>
             </div>
@@ -115,13 +132,6 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
           >
             log earlier date
           </button>
-          |
-          <button
-            onClick={() => setIsShareModalOpen(true)}
-            className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors"
-          >
-            {habit.isShared ? 'manage sharing' : 'share'}
-          </button>
         </div>
       </div>
 
@@ -143,12 +153,6 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
         onClose={() => setIsRemoveModalOpen(false)}
         habitName={habit.name}
         entries={entries}
-      />
-
-      <ShareHabitModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        habit={habit}
       />
 
       {habit.isShared && habit.sharedHabitId && (
@@ -175,7 +179,10 @@ function StatBadge({ habit, stats }: StatBadgeProps) {
   // 1. Currently at longest streak (most impressive)
   if (stats.currentStreak === stats.longestStreak && stats.longestStreak >= 3) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+        title={`At longest streak: ${stats.longestStreak} day${stats.longestStreak === 1 ? '' : 's'}`}
+      >
         <Trophy className="w-3 h-3" />
         {stats.longestStreak}
       </span>
@@ -185,7 +192,10 @@ function StatBadge({ habit, stats }: StatBadgeProps) {
   // 2. Active streak (3+ days)
   if (stats.currentStreak >= 3) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20"
+        title={`Current streak: ${stats.currentStreak} day${stats.currentStreak === 1 ? '' : 's'}`}
+      >
         <Flame className="w-3 h-3" />
         {stats.currentStreak}
       </span>
@@ -195,10 +205,14 @@ function StatBadge({ habit, stats }: StatBadgeProps) {
   // 3. Target met this period (target habits only)
   if (habit.targetCount && stats.completionsThisPeriod >= habit.targetCount) {
     const isOverachieving = stats.completionsThisPeriod > habit.targetCount
+    const periodLabel = habit.targetPeriod === 'day' ? 'today' : `this ${habit.targetPeriod}`
 
     if (isOverachieving) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20"
+          title={`Overachieving! ${stats.completionsThisPeriod} of ${habit.targetCount} ${periodLabel}`}
+        >
           <Rocket className="w-3 h-3" />
           {stats.completionsThisPeriod}/{habit.targetCount}
         </span>
@@ -206,7 +220,10 @@ function StatBadge({ habit, stats }: StatBadgeProps) {
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+        title={`Target met: ${stats.completionsThisPeriod} of ${habit.targetCount} ${periodLabel}`}
+      >
         <Target className="w-3 h-3" />
         {stats.completionsThisPeriod}/{habit.targetCount}
       </span>
@@ -216,7 +233,10 @@ function StatBadge({ habit, stats }: StatBadgeProps) {
   // 4. Show small streak if any
   if (stats.currentStreak > 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-neutral-800 text-neutral-400 border border-neutral-700">
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-neutral-800 text-neutral-400 border border-neutral-700"
+        title={`Current streak: ${stats.currentStreak} day${stats.currentStreak === 1 ? '' : 's'}`}
+      >
         <Flame className="w-3 h-3" />
         {stats.currentStreak}
       </span>

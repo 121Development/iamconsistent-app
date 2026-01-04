@@ -1,12 +1,19 @@
 import { format, subDays } from 'date-fns'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRef, useEffect, useState } from 'react'
+import { Share2, Trash2 } from 'lucide-react'
+import { useUser } from '@clerk/tanstack-react-start'
 import {
   getSharedHabitMembers,
   getSharedHabitLeaderboard,
   getSharedHabitMemberActivity,
+  deleteSharedHabit,
+  leaveSharedHabit,
 } from '../server/shared-habits'
 import type { Habit } from '../lib/db'
 import { getHabitColor } from '../lib/colors'
+import ShareHabitModal from './ShareHabitModal'
+import { toast } from 'sonner'
 
 interface SharedHabitsCalendarProps {
   habits: Habit[]
@@ -35,6 +42,11 @@ interface SharedHabitCalendarProps {
 }
 
 function SharedHabitCalendar({ habit }: SharedHabitCalendarProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const { user } = useUser()
+  const queryClient = useQueryClient()
+
   const { data: members } = useQuery({
     queryKey: ['shared-habit-members', habit.sharedHabitId],
     queryFn: () =>
@@ -62,7 +74,44 @@ function SharedHabitCalendar({ habit }: SharedHabitCalendarProps) {
     enabled: !!habit.sharedHabitId,
   })
 
+  // Delete shared habit mutation
+  const deleteSharedMutation = useMutation({
+    mutationFn: () =>
+      deleteSharedHabit({ data: { sharedHabitId: habit.sharedHabitId! } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] })
+      toast.success('Habit unshared. All members can continue tracking individually.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to unshare habit')
+    },
+  })
+
+  // Leave shared habit mutation (for members)
+  const leaveSharedMutation = useMutation({
+    mutationFn: () =>
+      leaveSharedHabit({ data: { habitId: habit.id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] })
+      toast.success('You have left the shared habit.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to leave shared habit')
+    },
+  })
+
+  // Scroll to the right (latest entries) on mount and when data changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth
+    }
+  }, [memberActivity])
+
   const colors = getHabitColor(habit.color)
+
+  // Check if current user is owner
+  const currentUserMember = members?.find((m) => m.userId === user?.id)
+  const isOwner = currentUserMember?.role === 'owner'
 
   // Generate last 30 days
   const days = Array.from({ length: 30 }, (_, i) => {
@@ -111,35 +160,82 @@ function SharedHabitCalendar({ habit }: SharedHabitCalendarProps) {
   return (
     <div className="border border-neutral-800 bg-neutral-900/50 rounded p-4">
       {/* Habit header */}
-      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-neutral-800">
-        <div
-          className="w-8 h-8 rounded flex items-center justify-center text-xl border"
-          style={{
-            backgroundColor: colors.bg,
-            borderColor: colors.border,
-          }}
-        >
-          {habit.icon}
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-neutral-800">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-8 h-8 rounded flex items-center justify-center text-xl border"
+            style={{
+              backgroundColor: colors.bg,
+              borderColor: colors.border,
+            }}
+          >
+            {habit.icon}
+          </div>
+          <h3 className="text-lg font-semibold text-neutral-100">{habit.name}</h3>
+          <span className="text-xs text-neutral-500">({members.length} members)</span>
         </div>
-        <h3 className="text-lg font-semibold text-neutral-100">{habit.name}</h3>
-        <span className="text-xs text-neutral-500">({members.length} members)</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-neutral-400 hover:text-neutral-200 bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-neutral-600 rounded transition-colors"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            Share Link
+          </button>
+          {isOwner && (
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    'Are you sure you want to unshare this habit? All members will keep their individual progress, but group tracking will end.'
+                  )
+                ) {
+                  deleteSharedMutation.mutate()
+                }
+              }}
+              disabled={deleteSharedMutation.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 bg-red-950/50 hover:bg-red-950 border border-red-900/50 hover:border-red-800 rounded transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {deleteSharedMutation.isPending ? 'Removing...' : 'Unshare'}
+            </button>
+          )}
+          {!isOwner && (
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    'Are you sure you want to leave this shared habit? Your individual progress will be archived, but you can continue tracking this habit on your own.'
+                  )
+                ) {
+                  leaveSharedMutation.mutate()
+                }
+              }}
+              disabled={leaveSharedMutation.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 bg-red-950/50 hover:bg-red-950 border border-red-900/50 hover:border-red-800 rounded transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {leaveSharedMutation.isPending ? 'Leaving...' : 'Leave'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Calendar grid */}
-      <div className="overflow-x-auto">
-        <div className="inline-flex gap-4">
-          {/* Member names column */}
-          <div className="space-y-2 flex-shrink-0 pt-6">
-            {members.map((member) => (
-              <div key={member.userId} className="h-4 flex items-center">
-                <span className="text-xs text-neutral-400 w-20 truncate">
-                  {formatMemberName(member.name, member.email)}
-                </span>
-              </div>
-            ))}
-          </div>
+      <div className="flex gap-4">
+        {/* Fixed member names column */}
+        <div className="space-y-2 flex-shrink-0 pt-6">
+          {members.map((member) => (
+            <div key={member.userId} className="h-4 flex items-center">
+              <span className="text-xs text-neutral-400 w-20 truncate">
+                {formatMemberName(member.name, member.email)}
+              </span>
+            </div>
+          ))}
+        </div>
 
-          {/* Calendar grid */}
+        {/* Scrollable calendar grid */}
+        <div ref={scrollContainerRef} className="overflow-x-auto flex-1">
           <div>
             {/* Day labels */}
             <div className="flex gap-1 mb-2">
@@ -207,6 +303,12 @@ function SharedHabitCalendar({ habit }: SharedHabitCalendarProps) {
             : 0}%
         </span>
       </div>
+
+      <ShareHabitModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        habit={habit}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, differenceInDays } from 'date-fns'
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, parseISO, differenceInDays } from 'date-fns'
 import type { Entry, Habit } from './db'
 
 export interface HabitStats {
@@ -56,9 +56,19 @@ export function calculateHabitStats(habit: Habit, entries: Entry[]): HabitStats 
     return entryDate >= monthStart && entryDate <= monthEnd
   }).length
 
+  // Today
+  const dayStart = startOfDay(now)
+  const dayEnd = endOfDay(now)
+  const completionsToday = entries.filter(e => {
+    const entryDate = parseISO(e.date)
+    return entryDate >= dayStart && entryDate <= dayEnd
+  }).length
+
   // This period (for target habits)
   let completionsThisPeriod = 0
-  if (habit.targetPeriod === 'week') {
+  if (habit.targetPeriod === 'day') {
+    completionsThisPeriod = completionsToday
+  } else if (habit.targetPeriod === 'week') {
     completionsThisPeriod = completionsThisWeek
   } else if (habit.targetPeriod === 'month') {
     completionsThisPeriod = completionsThisMonth
