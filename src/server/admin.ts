@@ -2,29 +2,14 @@ import { createServerFn } from '@tanstack/react-start'
 import { eq, sql } from 'drizzle-orm'
 import { createDb } from '../lib/db/client'
 import { users, habits, entries } from '../lib/db'
+import { env } from 'cloudflare:workers'
 import { requireAuth } from './auth'
 
-// Helper to get DB from context
-function getDb(context: any) {
-  // In production/preview, use env.DB
-  if (context?.cloudflare?.env?.DB) {
-    return createDb(context.cloudflare.env.DB)
-  }
-  // Fallback for dev mode - try to import dynamically
-  try {
-    // @ts-ignore
-    const { env } = require('cloudflare:workers')
-    return createDb(env.DB)
-  } catch (e) {
-    throw new Error('Database binding not available')
-  }
-}
-
 // Check if current user is admin
-export const isAdmin = createServerFn({ method: 'GET' }).handler(async (ctx) => {
+export const isAdmin = createServerFn({ method: 'GET' }).handler(async () => {
   try {
     const userId = await requireAuth()
-    const db = getDb(ctx)
+    const db = createDb(env.DB)
 
     const [user] = await db
       .select()
@@ -39,9 +24,9 @@ export const isAdmin = createServerFn({ method: 'GET' }).handler(async (ctx) => 
 })
 
 // Require admin access
-async function requireAdmin(context: any) {
+async function requireAdmin() {
   const userId = await requireAuth()
-  const db = getDb(context)
+  const db = createDb(env.DB)
 
   const [user] = await db
     .select()
@@ -57,10 +42,10 @@ async function requireAdmin(context: any) {
 }
 
 // Get total stats
-export const getAdminStats = createServerFn({ method: 'GET' }).handler(async (ctx) => {
-  await requireAdmin(ctx)
+export const getAdminStats = createServerFn({ method: 'GET' }).handler(async () => {
+  await requireAdmin()
 
-  const db = getDb(ctx)
+  const db = createDb(env.DB)
 
   // Get total users
   const [userCount] = await db
@@ -85,11 +70,54 @@ export const getAdminStats = createServerFn({ method: 'GET' }).handler(async (ct
   }
 })
 
-// Get daily trend data for the last 30 days
-export const getAdminTrends = createServerFn({ method: 'GET' }).handler(async (ctx) => {
-  await requireAdmin(ctx)
+// Get all users list
+export const getAdminUsers = createServerFn({ method: 'GET' }).handler(async () => {
+  await requireAdmin()
 
-  const db = getDb(ctx)
+  const db = createDb(env.DB)
+
+  const allUsers = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      subscriptionTier: users.subscriptionTier,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .orderBy(users.createdAt)
+
+  return allUsers
+})
+
+// Get all habits list
+export const getAdminHabits = createServerFn({ method: 'GET' }).handler(async () => {
+  await requireAdmin()
+
+  const db = createDb(env.DB)
+
+  const allHabits = await db
+    .select({
+      id: habits.id,
+      name: habits.name,
+      icon: habits.icon,
+      targetCount: habits.targetCount,
+      targetPeriod: habits.targetPeriod,
+      userId: habits.userId,
+      createdAt: habits.createdAt,
+    })
+    .from(habits)
+    .where(eq(habits.isArchived, false))
+    .orderBy(habits.createdAt)
+
+  return allHabits
+})
+
+// Get daily trend data for the last 30 days
+export const getAdminTrends = createServerFn({ method: 'GET' }).handler(async () => {
+  await requireAdmin()
+
+  const db = createDb(env.DB)
 
   // Get daily user signups for last 30 days
   const userTrends = await db

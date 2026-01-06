@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserButton, useAuth } from '@clerk/tanstack-react-start'
-import { LogOut, Trash2, Mail, User } from 'lucide-react'
+import { LogOut, Trash2, Mail, User, Shield } from 'lucide-react'
 import { getUserSettings, updateEmailNotifications, updateUserName, deleteUserAccount } from '../server/user'
+import { isAdmin } from '../server/admin'
 import { toast } from 'sonner'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, Link } from '@tanstack/react-router'
 
 export default function SettingsPanel() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -18,6 +19,13 @@ export default function SettingsPanel() {
   const { data: settings } = useQuery({
     queryKey: ['user-settings'],
     queryFn: () => getUserSettings(),
+  })
+
+  // Check if user is admin
+  const { data: adminCheck } = useQuery({
+    queryKey: ['admin-check'],
+    queryFn: () => isAdmin(),
+    retry: false,
   })
 
   // Update name
@@ -210,6 +218,17 @@ export default function SettingsPanel() {
                 </div>
               </div>
             </div>
+
+            {/* Admin Dashboard - only show for admins */}
+            {adminCheck?.isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-3 w-full p-3 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-500/20"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="text-sm font-medium">Admin Dashboard</span>
+              </Link>
+            )}
 
             {/* Sign Out */}
             <button
