@@ -4,6 +4,16 @@ export default function Footer() {
   return (
     <footer className="border-t border-neutral-800 bg-neutral-950 mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* About Link */}
+        <div className="text-center text-sm text-neutral-500 mb-4">
+          <Link
+            to="/about"
+            className="hover:text-neutral-300 transition-colors"
+          >
+            About
+          </Link>
+        </div>
+
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Legal Links */}
           <div className="flex items-center gap-4 text-sm text-neutral-500">

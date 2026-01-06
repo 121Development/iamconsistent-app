@@ -129,22 +129,31 @@ function SharedHabitCalendar({ habit }: SharedHabitCalendarProps) {
     return null
   }
 
-  // Format member name - use name if set, otherwise extract from email
+  // Format member name - use custom display name if set, otherwise format as "FirstName L."
   const formatMemberName = (name: string | null, email: string) => {
-    // If name is set, use it directly
     if (name && name.trim()) {
-      return name
+      const nameParts = name.trim().split(/\s+/)
+
+      // If name has multiple parts (e.g., "Erik Erikson"), format as "FirstName L."
+      if (nameParts.length >= 2) {
+        const firstName = nameParts[0]
+        const lastInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase()
+        return `${firstName} ${lastInitial}.`
+      }
+
+      // If single word (custom display name), use as-is
+      return name.trim()
     }
 
-    // Otherwise, extract from email
+    // No name set, extract from email
     const namePart = email.split('@')[0]
     const parts = namePart.split(/[._-]/).filter(Boolean)
 
     if (parts.length >= 2) {
-      // Capitalize first name and get first letter of last name
+      // Format as "FirstName L."
       const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase()
       const lastInitial = parts[1].charAt(0).toUpperCase()
-      return `${firstName} ${lastInitial}`
+      return `${firstName} ${lastInitial}.`
     } else if (parts.length === 1) {
       // Just capitalize the single name
       return parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase()

@@ -95,8 +95,7 @@ function DashboardContent() {
               {format(new Date(), 'EEE, MMM d')}
             </h1>
             <p className="text-sm text-neutral-500">
-              Track your habits. <br />
-              Build consistency.
+              i am consistent.
             </p>
           </div>
 

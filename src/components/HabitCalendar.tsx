@@ -69,7 +69,7 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
 
       <div className="flex gap-2 md:gap-4">
         {/* Fixed habit icons/names column */}
-        <div className="space-y-4 flex-shrink-0 pt-8 pb-2">
+        <div className="space-y-4 flex-shrink-0 pt-6 pb-2">
           {habits.map((habit) => {
             const colors = getHabitColor(habit.color)
             return (
@@ -97,39 +97,57 @@ export default function HabitCalendar({ habits, entriesMap }: HabitCalendarProps
 
         {/* Scrollable calendar grid */}
         <div ref={scrollContainerRef} className="overflow-x-auto flex-1 overflow-y-visible">
-          <div className="space-y-4 pt-8 pb-2">
-            {habits.map((habit, habitIndex) => (
-              <div key={habit.id} className="flex gap-1 h-3">
-                {allDays.map((day) => {
-                  const dateStr = format(day, 'yyyy-MM-dd')
-                  const count = getEntryCount(habit.id, day)
-                  const isHovered = hoveredCell?.habitId === habit.id && hoveredCell?.date === dateStr
+          <div>
+            {/* Day labels */}
+            <div className="flex gap-1 mb-2">
+              {allDays.map((day, index) => (
+                <div
+                  key={format(day, 'yyyy-MM-dd')}
+                  className="w-3 text-center"
+                  title={`${format(day, 'EEE')} ${format(day, 'd')}`}
+                >
+                  {index % 7 === 0 && (
+                    <span className="text-[8px] text-neutral-500">{format(day, 'd')}</span>
+                  )}
+                </div>
+              ))}
+            </div>
 
-                  return (
-                    <div
-                      key={dateStr}
-                      className="relative"
-                      onMouseEnter={() => setHoveredCell({ habitId: habit.id, date: dateStr })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                    >
+            {/* Habit rows */}
+            <div className="space-y-4 pb-2">
+              {habits.map((habit, habitIndex) => (
+                <div key={habit.id} className="flex gap-1 h-3">
+                  {allDays.map((day) => {
+                    const dateStr = format(day, 'yyyy-MM-dd')
+                    const count = getEntryCount(habit.id, day)
+                    const isHovered = hoveredCell?.habitId === habit.id && hoveredCell?.date === dateStr
+
+                    return (
                       <div
-                        className={`w-3 h-3 border rounded-sm transition-all ${getColorClass(count)} ${
-                          isHovered ? 'ring-1 ring-emerald-400 ring-offset-1 ring-offset-neutral-950' : ''
-                        }`}
-                        title={`${format(day, 'MMM d, yyyy')}: ${count} ${count === 1 ? 'entry' : 'entries'}`}
-                      />
+                        key={dateStr}
+                        className="relative"
+                        onMouseEnter={() => setHoveredCell({ habitId: habit.id, date: dateStr })}
+                        onMouseLeave={() => setHoveredCell(null)}
+                      >
+                        <div
+                          className={`w-3 h-3 border rounded-sm transition-all ${getColorClass(count)} ${
+                            isHovered ? 'ring-1 ring-emerald-400 ring-offset-1 ring-offset-neutral-950' : ''
+                          }`}
+                          title={`${format(day, 'MMM d, yyyy')}: ${count} ${count === 1 ? 'entry' : 'entries'}`}
+                        />
 
-                      {/* Tooltip - always show above */}
-                      {isHovered && (
-                        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none shadow-lg">
-                          {format(day, 'MMM d, yyyy')}: {count} {count === 1 ? 'entry' : 'entries'}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
+                        {/* Tooltip - always show above */}
+                        {isHovered && (
+                          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none shadow-lg">
+                            {format(day, 'MMM d, yyyy')}: {count} {count === 1 ? 'entry' : 'entries'}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

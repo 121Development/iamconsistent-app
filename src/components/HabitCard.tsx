@@ -69,8 +69,8 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   return (
     <>
       <div className="border border-neutral-800 bg-neutral-900/50 p-5 rounded hover:border-neutral-700 transition-colors">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-start gap-3 flex-1">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
             <button
               ref={iconRef}
               onClick={() => habit.description && setShowDescription(!showDescription)}
@@ -94,9 +94,9 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
               )}
             </button>
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3
-                  className="text-base font-semibold text-neutral-100 truncate group relative"
+                  className="text-base font-semibold text-neutral-100 break-words group relative"
                   title={habit.description || habit.name}
                 >
                   {habit.name}

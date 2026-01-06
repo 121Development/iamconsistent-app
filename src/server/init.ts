@@ -33,14 +33,20 @@ export const syncUser = createServerFn({ method: 'GET' }).handler(async () => {
                     clerkUser.emailAddresses[0]?.emailAddress ||
                     `${userId}@clerk.user`
 
+      // Extract first and last name from Clerk user
+      const firstName = clerkUser.firstName || ''
+      const lastName = clerkUser.lastName || ''
+      const fullName = [firstName, lastName].filter(Boolean).join(' ').trim() || null
+
       // Create user in database
       await db.insert(users).values({
         id: userId,
         email: email,
+        name: fullName,
         subscriptionTier: 'free',
         emailNotifications: true,
       })
-      console.log('User synced to database:', userId, email)
+      console.log('User synced to database:', userId, email, fullName)
     }
 
     return { success: true, userId }
