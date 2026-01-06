@@ -5,6 +5,7 @@ import { createDb } from '../lib/db/client'
 import { entries, habits } from '../lib/db'
 import {
   createEntrySchema,
+  updateEntrySchema,
   deleteEntrySchema,
   getEntriesSchema,
 } from './schemas'
@@ -82,6 +83,36 @@ export const createEntry = createServerFn({ method: 'POST' })
       .returning()
 
     return newEntry
+  })
+
+// Update an entry
+export const updateEntry = createServerFn({ method: 'POST' })
+  .inputValidator(updateEntrySchema)
+  .handler(async ({ data }) => {
+    const userId = await requireAuth()
+
+    const db = createDb(env.DB)
+
+    // Verify entry ownership
+    const [existingEntry] = await db
+      .select()
+      .from(entries)
+      .where(and(eq(entries.id, data.id), eq(entries.userId, userId)))
+      .limit(1)
+
+    if (!existingEntry) {
+      throw new Error('Entry not found')
+    }
+
+    const [updatedEntry] = await db
+      .update(entries)
+      .set({
+        note: data.note,
+      })
+      .where(eq(entries.id, data.id))
+      .returning()
+
+    return updatedEntry
   })
 
 // Delete an entry

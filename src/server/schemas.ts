@@ -47,6 +47,11 @@ export const createEntrySchema = z.object({
   note: z.string().max(500).optional(),
 })
 
+export const updateEntrySchema = z.object({
+  id: z.string(),
+  note: z.string().max(500).optional().nullable(),
+})
+
 export const deleteEntrySchema = z.object({
   id: z.string(),
 })

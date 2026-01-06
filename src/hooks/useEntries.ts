@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query'
-import { getEntries, createEntry, deleteEntry } from '../server/entries'
+import { getEntries, createEntry, updateEntry, deleteEntry } from '../server/entries'
 import { queryKeys } from '../lib/queryKeys'
 import { toast } from 'sonner'
 import { calculateHabitStats } from '../lib/stats'
@@ -102,6 +102,24 @@ export function useCreateEntry() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to log entry')
+    },
+  })
+}
+
+// Update entry mutation
+export function useUpdateEntry() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: { id: string; note: string | null | undefined }) =>
+      updateEntry({ data }),
+    onSuccess: () => {
+      // Invalidate all entries queries to refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.entries.all })
+      toast.success('Entry updated!')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update entry')
     },
   })
 }

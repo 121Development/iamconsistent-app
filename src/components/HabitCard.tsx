@@ -172,7 +172,7 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
             onClick={() => setIsRemoveModalOpen(true)}
             className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
           >
-            remove entry
+            edit entry
           </button>
           |
           <button
