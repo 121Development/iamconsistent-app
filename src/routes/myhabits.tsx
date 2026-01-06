@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Plus, UserPlus } from 'lucide-react'
+import { Plus, UserPlus, Users } from 'lucide-react'
 import { format } from 'date-fns'
 import HabitCard from '../components/HabitCard'
 import HabitCalendar from '../components/HabitCalendar'
@@ -10,6 +10,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import CreateHabitModal from '../components/CreateHabitModal'
 import InviteFriendModal from '../components/InviteFriendModal'
 import ShareHabitModal from '../components/ShareHabitModal'
+import JoinHabitModal from '../components/JoinHabitModal'
 import Footer from '../components/Footer'
 import type { Habit } from '../lib/db'
 import { ProtectedRoute } from '../components/ProtectedRoute'
@@ -32,6 +33,7 @@ function Dashboard() {
 function DashboardContent() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isInviteFriendModalOpen, setIsInviteFriendModalOpen] = useState(false)
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
   const [selectedHabitToShare, setSelectedHabitToShare] = useState<Habit | null>(null)
   const [isSyncing, setIsSyncing] = useState(true)
   const navigate = useNavigate()
@@ -131,13 +133,20 @@ function DashboardContent() {
         )}
 
         {habits.length > 0 && (
-          <div className="flex justify-center mt-8">
+          <div className="flex justify-center gap-3 mt-8">
             <button
               onClick={() => setIsInviteFriendModalOpen(true)}
-              className="w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-emerald-500/50 text-neutral-300 font-medium py-3 px-4 rounded transition-colors flex items-center justify-center gap-2"
+              className="flex-1 md:flex-none md:w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-0.5rem)] bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-emerald-500/50 text-neutral-300 font-medium py-3 px-4 rounded transition-colors flex items-center justify-center gap-2"
             >
               <UserPlus className="h-4 w-4" />
               <span className="text-sm">Track with a Friend</span>
+            </button>
+            <button
+              onClick={() => setIsJoinModalOpen(true)}
+              className="flex-1 md:flex-none md:w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-0.5rem)] bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-blue-500/50 text-neutral-300 font-medium py-3 px-4 rounded transition-colors flex items-center justify-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              <span className="text-sm">Join Shared Habit</span>
             </button>
           </div>
         )}
@@ -172,6 +181,11 @@ function DashboardContent() {
             habit={selectedHabitToShare}
           />
         )}
+
+        <JoinHabitModal
+          isOpen={isJoinModalOpen}
+          onClose={() => setIsJoinModalOpen(false)}
+        />
       </div>
       </div>
 

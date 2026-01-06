@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Trophy, Flame, Target, Rocket, Users } from 'lucide-react'
 import type { Habit, Entry } from '../lib/db'
 import { format } from 'date-fns'
@@ -20,9 +20,28 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
+  const [showDescription, setShowDescription] = useState(false)
+  const iconRef = useRef<HTMLButtonElement>(null)
 
   const createEntryMutation = useCreateEntry()
   const deleteEntryMutation = useDeleteEntry()
+
+  // Close description when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (iconRef.current && !iconRef.current.contains(event.target as Node)) {
+        setShowDescription(false)
+      }
+    }
+
+    if (showDescription) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showDescription])
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const todayEntries = entries.filter(e => e.date === today)
@@ -52,21 +71,28 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
       <div className="border border-neutral-800 bg-neutral-900/50 p-5 rounded hover:border-neutral-700 transition-colors">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start gap-3 flex-1">
-            <div
-              className="w-10 h-10 rounded flex items-center justify-center text-2xl border flex-shrink-0 group relative"
+            <button
+              ref={iconRef}
+              onClick={() => habit.description && setShowDescription(!showDescription)}
+              className={`w-10 h-10 rounded flex items-center justify-center text-2xl border flex-shrink-0 group relative ${
+                habit.description ? 'cursor-pointer hover:opacity-80' : ''
+              }`}
               style={{
                 backgroundColor: colors.bg,
                 borderColor: colors.border,
               }}
               title={habit.description || habit.name}
+              type="button"
             >
               {habit.icon}
               {habit.description && (
-                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 max-w-xs">
+                <div className={`absolute left-full ml-2 top-0 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded text-xs text-neutral-100 whitespace-nowrap pointer-events-none transition-opacity z-50 max-w-xs ${
+                  showDescription ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}>
                   {habit.description}
                 </div>
               )}
-            </div>
+            </button>
             <div className="flex flex-col gap-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3

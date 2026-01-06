@@ -157,10 +157,10 @@ export default function SettingsPanel() {
           </div>
 
           {/* Email Notifications Toggle */}
-          <div className="flex items-center justify-between pb-6 border-b border-neutral-800">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-neutral-400" />
-              <div>
+          <div className="flex items-center justify-between gap-4 pb-6 border-b border-neutral-800">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Mail className="w-5 h-5 text-neutral-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-neutral-100">
                   Allow email sendouts
                 </div>
@@ -172,7 +172,7 @@ export default function SettingsPanel() {
             <button
               onClick={handleEmailToggle}
               disabled={updateEmailMutation.isPending}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                 settings?.emailNotifications
                   ? 'bg-emerald-500'
                   : 'bg-neutral-700'

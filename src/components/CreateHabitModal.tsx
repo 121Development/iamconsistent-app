@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useCreateHabit } from '../hooks/useHabits'
+import { toast } from 'sonner'
 
 interface CreateHabitModalProps {
   isOpen: boolean
@@ -23,7 +24,7 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
   const [icon, setIcon] = useState('💪')
   const [color, setColor] = useState('emerald')
   const [useTarget, setUseTarget] = useState(false)
-  const [targetCount, setTargetCount] = useState(3)
+  const [targetCount, setTargetCount] = useState<number | ''>(3)
   const [targetPeriod, setTargetPeriod] = useState<'day' | 'week' | 'month'>('week')
 
   const createHabitMutation = useCreateHabit()
@@ -34,13 +35,19 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
     e.preventDefault()
     if (!name.trim()) return
 
+    // Validate target count if target is enabled
+    if (useTarget && (targetCount === '' || targetCount < 1)) {
+      toast.error('Please enter a valid target count (must be at least 1)')
+      return
+    }
+
     createHabitMutation.mutate(
       {
         name: name.trim(),
         description: description.trim() || undefined,
         icon,
         color,
-        ...(useTarget && { targetCount, targetPeriod }),
+        ...(useTarget && { targetCount: targetCount as number, targetPeriod }),
       },
       {
         onSuccess: () => {
@@ -134,7 +141,17 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
                   type="number"
                   min="1"
                   value={targetCount}
-                  onChange={(e) => setTargetCount(parseInt(e.target.value) || 1)}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '') {
+                      setTargetCount('')
+                    } else {
+                      const num = parseInt(val)
+                      if (!isNaN(num) && num > 0) {
+                        setTargetCount(num)
+                      }
+                    }
+                  }}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
               </div>
