@@ -25,6 +25,22 @@ export const Route = createRootRoute({
       },
     ],
     links: [
+      // Preconnect to Google Fonts for faster loading
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com',
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      // Preload critical CSS
+      {
+        rel: 'preload',
+        href: appCss,
+        as: 'style',
+      },
       {
         rel: 'stylesheet',
         href: appCss,
