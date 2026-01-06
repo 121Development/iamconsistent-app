@@ -17,6 +17,7 @@ export const createHabitSchema = z.object({
   color: z.string().min(1).default('gray'),
   targetCount: z.number().int().positive().optional(),
   targetPeriod: z.enum(['day', 'week', 'month']).optional(),
+  notesEnabled: z.boolean().optional().default(false),
 })
 
 export const updateHabitSchema = z.object({
@@ -28,6 +29,7 @@ export const updateHabitSchema = z.object({
   targetCount: z.number().int().positive().optional().nullable(),
   targetPeriod: z.enum(['day', 'week', 'month']).optional().nullable(),
   isArchived: z.boolean().optional(),
+  notesEnabled: z.boolean().optional(),
 })
 
 export const deleteHabitSchema = z.object({

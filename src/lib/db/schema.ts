@@ -38,6 +38,9 @@ export const habits = sqliteTable('habits', {
   targetCount: integer('target_count'), // e.g., 3 times
   targetPeriod: text('target_period', { enum: ['day', 'week', 'month'] }), // per day/week/month
 
+  // Notes feature
+  notesEnabled: integer('notes_enabled', { mode: 'boolean' }).notNull().default(false),
+
   // Shared habit tracking
   isShared: integer('is_shared', { mode: 'boolean' }).notNull().default(false),
   sharedHabitId: text('shared_habit_id'), // References shared_habits.id (no FK to allow orphaned habits)

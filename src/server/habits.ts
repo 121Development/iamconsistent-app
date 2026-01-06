@@ -123,6 +123,7 @@ export const createHabit = createServerFn({ method: 'POST' })
         color: data.color,
         targetCount: data.targetCount,
         targetPeriod: data.targetPeriod,
+        notesEnabled: data.notesEnabled ?? false,
       })
       .returning()
 
@@ -160,6 +161,7 @@ export const updateHabit = createServerFn({ method: 'POST' })
     if (data.isArchived !== undefined) updateData.isArchived = data.isArchived
     if (data.targetCount !== undefined) updateData.targetCount = data.targetCount
     if (data.targetPeriod !== undefined) updateData.targetPeriod = data.targetPeriod
+    if (data.notesEnabled !== undefined) updateData.notesEnabled = data.notesEnabled
 
     const [updatedHabit] = await db
       .update(habits)

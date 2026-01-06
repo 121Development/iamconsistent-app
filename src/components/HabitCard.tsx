@@ -9,6 +9,7 @@ import LogPastDateModal from './LogPastDateModal'
 import RemoveEntryModal from './RemoveEntryModal'
 import EditHabitModal from './EditHabitModal'
 import SharedHabitStats from './SharedHabitStats'
+import NoteEntryModal from './NoteEntryModal'
 
 interface HabitCardProps {
   habit: Habit
@@ -20,6 +21,7 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
   const iconRef = useRef<HTMLButtonElement>(null)
 
@@ -48,10 +50,31 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
   const todayCount = todayEntries.length
 
   const handleIncrement = () => {
-    createEntryMutation.mutate({
-      habitId: habit.id,
-      date: today,
-    })
+    // If notes are enabled, show the note modal first
+    if (habit.notesEnabled) {
+      setIsNoteModalOpen(true)
+    } else {
+      // Otherwise, create entry directly without a note
+      createEntryMutation.mutate({
+        habitId: habit.id,
+        date: today,
+      })
+    }
+  }
+
+  const handleSaveNote = (note: string) => {
+    createEntryMutation.mutate(
+      {
+        habitId: habit.id,
+        date: today,
+        note: note || undefined,
+      },
+      {
+        onSuccess: () => {
+          setIsNoteModalOpen(false)
+        },
+      }
+    )
   }
 
   const handleDecrement = () => {
@@ -189,6 +212,14 @@ export default function HabitCard({ habit, entries }: HabitCardProps) {
           sharedHabitId={habit.sharedHabitId}
         />
       )}
+
+      <NoteEntryModal
+        isOpen={isNoteModalOpen}
+        onClose={() => setIsNoteModalOpen(false)}
+        onSave={handleSaveNote}
+        habitName={habit.name}
+        isLoading={createEntryMutation.isPending}
+      />
     </>
   )
 }

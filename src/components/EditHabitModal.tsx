@@ -24,6 +24,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
   const [description, setDescription] = useState(habit.description || '')
   const [icon, setIcon] = useState(habit.icon)
   const [color, setColor] = useState(habit.color)
+  const [notesEnabled, setNotesEnabled] = useState(habit.notesEnabled ?? false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const updateHabitMutation = useUpdateHabit()
@@ -35,6 +36,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
     setDescription(habit.description || '')
     setIcon(habit.icon)
     setColor(habit.color)
+    setNotesEnabled(habit.notesEnabled ?? false)
   }, [habit])
 
   if (!isOpen) return null
@@ -50,6 +52,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
         description: description.trim() || undefined,
         icon,
         color,
+        notesEnabled,
       },
       {
         onSuccess: () => {
@@ -110,6 +113,30 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
               maxLength={100}
               className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
+          </div>
+
+          <div>
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium text-neutral-300">
+                Add notes to logged habit. <br />
+                Can be adjusted later also
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={notesEnabled}
+                onClick={() => setNotesEnabled(!notesEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-neutral-900 ${
+                  notesEnabled ? 'bg-emerald-500' : 'bg-neutral-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    notesEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </label>
           </div>
 
           <div>

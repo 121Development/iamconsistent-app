@@ -26,6 +26,7 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
   const [useTarget, setUseTarget] = useState(false)
   const [targetCount, setTargetCount] = useState<number | ''>(3)
   const [targetPeriod, setTargetPeriod] = useState<'day' | 'week' | 'month'>('week')
+  const [notesEnabled, setNotesEnabled] = useState(false)
 
   const createHabitMutation = useCreateHabit()
 
@@ -47,6 +48,7 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
         description: description.trim() || undefined,
         icon,
         color,
+        notesEnabled,
         ...(useTarget && { targetCount: targetCount as number, targetPeriod }),
       },
       {
@@ -59,6 +61,7 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
           setUseTarget(false)
           setTargetCount(3)
           setTargetPeriod('week')
+          setNotesEnabled(false)
           onClose()
         },
       }
@@ -105,6 +108,30 @@ export default function CreateHabitModal({ isOpen, onClose }: CreateHabitModalPr
               maxLength={100}
               className="w-full bg-neutral-950 border border-neutral-800 rounded px-4 py-2.5 text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
+          </div>
+
+          <div>
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium text-neutral-300">
+                Add notes to logged habit. <br />
+                Can be adjusted later also
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={notesEnabled}
+                onClick={() => setNotesEnabled(!notesEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-neutral-900 ${
+                  notesEnabled ? 'bg-emerald-500' : 'bg-neutral-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    notesEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </label>
           </div>
 
           <div>
