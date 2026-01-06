@@ -13,6 +13,9 @@ export const users = sqliteTable('users', {
   emailNotifications: integer('email_notifications', { mode: 'boolean' })
     .notNull()
     .default(true),
+  isAdmin: integer('is_admin', { mode: 'boolean' })
+    .notNull()
+    .default(false),
   createdAt: text('created_at')
     .notNull()
     .default(sql`(datetime('now'))`),

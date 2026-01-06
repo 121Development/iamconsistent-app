@@ -21,11 +21,11 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'iamconsistent - Build Better Habits',
+        title: 'iamconsistent.io - Track habits. Stay consistent.',
       },
       {
         name: 'description',
-        content: 'Track your habits. Build consistency. Simple daily habit tracking with streaks, targets, and shared habits.',
+        content: 'Track your habits. Add notes or share with friends. See milestones, streaks and achievements. As web and PWA-app',
       },
       {
         name: 'theme-color',
@@ -38,6 +38,68 @@ export const Route = createRootRoute({
       {
         name: 'apple-mobile-web-app-status-bar-style',
         content: 'black-translucent',
+      },
+      // Open Graph
+      {
+        property: 'og:title',
+        content: 'iamconsistent.io - Track habits. Stay consistent.',
+      },
+      {
+        property: 'og:description',
+        content: 'Track your habits. Add notes or share with friends. See milestones, streaks and achievements. As web and PWA-app',
+      },
+      {
+        property: 'og:type',
+        content: 'website',
+      },
+      {
+        property: 'og:url',
+        content: 'https://iamconsistent.io',
+      },
+      {
+        property: 'og:site_name',
+        content: 'iamconsistent',
+      },
+      {
+        property: 'og:image',
+        content: 'https://iamconsistent.io/og-image.png',
+      },
+      {
+        property: 'og:image:secure_url',
+        content: 'https://iamconsistent.io/og-image.png',
+      },
+      {
+        property: 'og:image:type',
+        content: 'image/png',
+      },
+      {
+        property: 'og:image:width',
+        content: '1200',
+      },
+      {
+        property: 'og:image:height',
+        content: '630',
+      },
+      {
+        property: 'og:image:alt',
+        content: 'iamconsistent - Track habits. Stay consistent.',
+      },
+      // Twitter Card
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image',
+      },
+      {
+        name: 'twitter:title',
+        content: 'iamconsistent.io - Track habits. Stay consistent.',
+      },
+      {
+        name: 'twitter:description',
+        content: 'Track your habits. Add notes or share with friends. See milestones, streaks and achievements. As web and PWA-app',
+      },
+      {
+        name: 'twitter:image',
+        content: 'https://iamconsistent.io/twitter-image.png',
       },
     ],
     links: [

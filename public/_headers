@@ -1,6 +1,16 @@
+# Open Graph images - allow CORS for social media crawlers
+/og-image.png
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=31536000, immutable
+
+/twitter-image.png
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=31536000, immutable
+
 # Cache static assets with hash in filename forever
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 
 # Cache CSS files
 /*.css
@@ -18,22 +28,38 @@
 /*.ttf
   Cache-Control: public, max-age=31536000, immutable
 
-# Cache images
+# Cache images with CORS support
 /*.jpg
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 /*.jpeg
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 /*.png
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 /*.svg
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 /*.webp
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 /*.ico
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 
-# HTML files - always revalidate
+# HTML files - always revalidate with CORS
 /
   Cache-Control: public, max-age=0, must-revalidate
+  Access-Control-Allow-Origin: *
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+  Access-Control-Allow-Origin: *
+
+# Manifest and PWA files
+/manifest.json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400
+
+/*.png
+  Access-Control-Allow-Origin: *

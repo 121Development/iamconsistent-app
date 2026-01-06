@@ -9,7 +9,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:text-emerald-400 transition-colors">
             <Terminal className="h-5 w-5 text-emerald-400" />
-            <span className="text-lg font-semibold tracking-tight">$ iamconsistent</span>
+            <span className="text-lg font-semibold tracking-tight">iamconsistent.</span>
           </Link>
 
           <nav className="flex items-center gap-4">

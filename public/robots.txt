@@ -1,3 +1,21 @@
 # https://www.robotstxt.org/robotstxt.html
+
+# Allow all social media crawlers explicitly
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: Twitterbot
+User-agent: LinkedInBot
+User-agent: Slackbot
+User-agent: Discordbot
+User-agent: TelegramBot
+User-agent: WhatsApp
+User-agent: Signal
+User-agent: SkypeUriPreview
+User-agent: Pinterest
+User-agent: Pinterestbot
+User-agent: redditbot
+Allow: /
+
+# Allow all other crawlers
 User-agent: *
 Disallow:
