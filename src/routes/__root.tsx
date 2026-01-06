@@ -23,8 +23,34 @@ export const Route = createRootRoute({
       {
         title: 'iamconsistent - Build Better Habits',
       },
+      {
+        name: 'description',
+        content: 'Track your habits. Build consistency. Simple daily habit tracking with streaks, targets, and shared habits.',
+      },
+      {
+        name: 'theme-color',
+        content: '#0a0a0a',
+      },
+      {
+        name: 'apple-mobile-web-app-capable',
+        content: 'yes',
+      },
+      {
+        name: 'apple-mobile-web-app-status-bar-style',
+        content: 'black-translucent',
+      },
     ],
     links: [
+      // PWA manifest
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
+      },
+      // Apple touch icon
+      {
+        rel: 'apple-touch-icon',
+        href: '/apple-touch-icon.png',
+      },
       // Preconnect to Google Fonts for faster loading
       {
         rel: 'preconnect',
